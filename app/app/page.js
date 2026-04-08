@@ -1,3 +1,6 @@
+"use client";
+import { signIn } from "next-auth/react";
+
 export default function Home() {
   return (
     <main style={{minHeight: '100vh', background: 'linear-gradient(135deg, #1a2a6c 0%, #1565C0 60%, #1E88E5 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem', gap: '3rem', fontFamily: 'sans-serif'}}>
@@ -57,7 +60,10 @@ export default function Home() {
 
         <div style={{textAlign: 'center', color: '#ccc', fontSize: '12px', margin: '1rem 0'}}>o continúa con</div>
 
-        <button style={{width: '100%', padding: '11px', background: 'white', color: '#444', border: '1.5px solid #e0e0e0', borderRadius: '10px', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'}}>
+        <button
+          onClick={() => signIn("google")}
+          style={{width: '100%', padding: '11px', background: 'white', color: '#444', border: '1.5px solid #e0e0e0', borderRadius: '10px', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'}}
+        >
           Continuar con Google SSO
         </button>
 
