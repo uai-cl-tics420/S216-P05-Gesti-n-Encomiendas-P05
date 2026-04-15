@@ -37,21 +37,13 @@ export default function Home() {
         <p style={{fontSize: '20px', fontWeight: '500', color: '#1a1a1a', marginBottom: '4px'}}>Bienvenido</p>
         <p style={{fontSize: '13px', color: '#999', marginBottom: '1.8rem'}}>Ingresa al sistema inCharge</p>
 
-        <div style={{display: 'flex', gap: '8px', marginBottom: '1.5rem'}}>
-          {['Residente', 'Conserje', 'Admin'].map((role) => (
-            <button key={role} style={{flex: 1, padding: '8px 4px', textAlign: 'center', borderRadius: '8px', fontSize: '12px', border: '1.5px solid #e0e0e0', color: '#999', background: 'white', cursor: 'pointer'}}>
-              {role}
-            </button>
-          ))}
-        </div>
-
         <div style={{marginBottom: '1.1rem'}}>
           <label style={{fontSize: '12px', color: '#777', marginBottom: '5px', display: 'block'}}>Correo electrónico</label>
-          <input type="text" placeholder="tu@correo.com" style={{width: '100%', padding: '11px 14px', border: '1.5px solid #e8e8e8', borderRadius: '10px', fontSize: '14px', outline: 'none', background: '#fafafa'}}/>
+          <input type="text" placeholder="tu@correo.com" style={{width: '100%', padding: '11px 14px', border: '1.5px solid #000000', borderRadius: '10px', fontSize: '14px', outline: 'none', background: '#ffffff', color: '#1a1a1a'}}/>
         </div>
         <div style={{marginBottom: '1.1rem'}}>
           <label style={{fontSize: '12px', color: '#777', marginBottom: '5px', display: 'block'}}>Contraseña</label>
-          <input type="password" placeholder="••••••••" style={{width: '100%', padding: '11px 14px', border: '1.5px solid #e8e8e8', borderRadius: '10px', fontSize: '14px', outline: 'none', background: '#fafafa'}}/>
+          <input type="password" placeholder="••••••••" style={{width: '100%', padding: '11px 14px', border: '1.5px solid #000000', borderRadius: '10px', fontSize: '14px', outline: 'none', background: '#fafafa', color: '#1a1a1a'}}/>
         </div>
 
         <button style={{width: '100%', padding: '13px', background: '#EF5350', color: 'white', border: 'none', borderRadius: '10px', fontSize: '15px', fontWeight: '500', cursor: 'pointer'}}>
@@ -62,13 +54,13 @@ export default function Home() {
 
         <button
           onClick={() => signIn("google")}
-          style={{width: '100%', padding: '11px', background: 'white', color: '#444', border: '1.5px solid #e0e0e0', borderRadius: '10px', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'}}
+          style={{width: '100%', padding: '11px', background: 'white', color: '#928f8f', border: '1.5px solid #000000', borderRadius: '10px', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'}}
         >
           Continuar con Google SSO
         </button>
 
         <p style={{textAlign: 'center', fontSize: '11px', color: '#bbb', marginTop: '1rem'}}>
-          ¿Problemas para acceder? <a href="#" style={{color: '#1565C0'}}>Contactar admin</a>
+          ¿No tienes cuenta? <a href="#" style={{color: '#1565C0'}}>Registrar usuario</a>
         </p>
       </div>
 
