@@ -3,6 +3,7 @@ import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
+
 const prisma = new PrismaClient();
 
 const handler = NextAuth({
@@ -37,10 +38,24 @@ const handler = NextAuth({
           id: String(user.id),
           name: user.full_name,
           email: user.email,
+          role: user.role ?? "residente",
         };
       },
     }),
   ],
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) token.role = (user as any).role;
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user) (session.user as any).role = token.role;
+      return session;
+    },
+    async redirect({ url, baseUrl }) {
+      return baseUrl + "/redirect";
+    },
+  },
   pages: {
     signIn: "/",
   },
