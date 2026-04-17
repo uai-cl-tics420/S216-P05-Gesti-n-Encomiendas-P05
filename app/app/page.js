@@ -5,6 +5,8 @@ import { signIn } from "next-auth/react";
 export default function Home() {
   const [isLogin, setIsLogin] = useState(true);
   const [selectedRole, setSelectedRole] = useState("Residente");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const roles = ["Residente", "Conserje", "Admin"];
 
@@ -41,7 +43,7 @@ export default function Home() {
       {/* Card Principal */}
       <div style={{background: 'white', borderRadius: '20px', padding: '2.5rem 2rem', width: '100%', maxWidth: '380px', boxShadow: '0 10px 25px rgba(0,0,0,0.2)'}}>
         <p style={{fontSize: '20px', fontWeight: '600', color: '#1a1a1a', marginBottom: '4px'}}>
-          {isLogin ? "Bienvenido de vuelta" : "Crea tu cuenta"}
+          {isLogin ? "Bienvenido" : "Crea tu cuenta"}
         </p>
         <p style={{fontSize: '13px', color: '#999', marginBottom: '1.8rem'}}>
           {isLogin ? "Ingresa al sistema inCharge" : "Selecciona tu perfil y regístrate"}
@@ -81,15 +83,27 @@ export default function Home() {
         {/* Campos Comunes */}
         <div style={{marginBottom: '1.1rem'}}>
           <label style={{fontSize: '12px', color: '#777', marginBottom: '5px', display: 'block'}}>Correo electrónico</label>
-          <input type="email" placeholder="tu@correo.com" style={{width: '100%', padding: '11px 14px', border: '1.5px solid #e8e8e8', borderRadius: '10px', fontSize: '14px', outline: 'none', background: '#fafafa'}}/>
+          <input 
+            type="email" 
+            placeholder="tu@correo.com" 
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            style={{width: '100%', padding: '11px 14px', border: '1.5px solid #e8e8e8', borderRadius: '10px', fontSize: '14px', outline: 'none', background: '#fafafa', color: '#000000'}}/>
         </div>
         
         <div style={{marginBottom: '1.5rem'}}>
           <label style={{fontSize: '12px', color: '#777', marginBottom: '5px', display: 'block'}}>Contraseña</label>
-          <input type="password" placeholder="••••••••" style={{width: '100%', padding: '11px 14px', border: '1.5px solid #e8e8e8', borderRadius: '10px', fontSize: '14px', outline: 'none', background: '#fafafa'}}/>
+          <input 
+            type="password" 
+            placeholder="••••••••" 
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            style={{width: '100%', padding: '11px 14px', border: '1.5px solid #e8e8e8', borderRadius: '10px', fontSize: '14px', outline: 'none', background: '#fafafa', color: '#000000'}}/>
         </div>
 
-        <button style={{width: '100%', padding: '13px', background: '#EF5350', color: 'white', border: 'none', borderRadius: '10px', fontSize: '15px', fontWeight: '600', cursor: 'pointer'}}>
+        <button 
+          onClick={() => signIn("credentials", { email, password, callbackUrl: "/redirect" })}
+          style={{width: '100%', padding: '13px', background: '#EF5350', color: 'white', border: 'none', borderRadius: '10px', fontSize: '15px', fontWeight: '600', cursor: 'pointer'}}>
           {isLogin ? "Ingresar" : "Crear cuenta"}
         </button>
 
