@@ -2,10 +2,12 @@
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useLanguage } from "../../context/LanguageContext";
 
 export default function ConserjedDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { t, lang, toggleLang } = useLanguage();
 
   const [packages, setPackages] = useState([
     {id: 1, code: 'PKG-001', desc: 'Caja Amazon', depto: '101', resident: 'Maria Gonzalez', status: 'Pendiente', date: 'Hoy 10:30'},
@@ -55,9 +57,13 @@ export default function ConserjedDashboard() {
           <span style={{fontSize: '22px', fontWeight: '500', color: 'white'}}>Charge<span style={{color: '#EF5350'}}>.</span></span>
         </div>
         <div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
+          <button onClick={toggleLang}
+            style={{padding: '6px 14px', background: 'rgba(255,255,255,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.4)', borderRadius: '20px', cursor: 'pointer', fontSize: '13px'}}>
+            {lang === "es" ? "EN" : "ES"}
+          </button>
           <span style={{color: 'white', fontSize: '14px'}}>👤 {session?.user?.name}</span>
           <button onClick={() => signOut({ callbackUrl: '/' })} style={{padding: '8px 16px', background: '#EF5350', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '13px'}}>
-            Cerrar sesión
+            {t.logout}
           </button>
         </div>
       </div>
@@ -65,22 +71,21 @@ export default function ConserjedDashboard() {
       <div style={{padding: '2rem', maxWidth: '900px', margin: '0 auto'}}>
         <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem'}}>
           <div>
-            <h1 style={{fontSize: '22px', fontWeight: '500', color: '#1a1a1a', margin: 0}}>Panel Conserje</h1>
-            <p style={{fontSize: '14px', color: '#999', margin: '4px 0 0'}}>Gestión de encomiendas del edificio</p>
+            <h1 style={{fontSize: '22px', fontWeight: '500', color: '#1a1a1a', margin: 0}}>{t.conciergePanel}</h1>
+            <p style={{fontSize: '14px', color: '#999', margin: '4px 0 0'}}>{t.conciergeSubtitle}</p>
           </div>
-          <button 
-            onClick={() => setShowForm(!showForm)}
+          <button onClick={() => setShowForm(!showForm)}
             style={{padding: '10px 20px', background: '#1565C0', color: 'white', border: 'none', borderRadius: '10px', cursor: 'pointer', fontSize: '14px', fontWeight: '500'}}>
-            + Llegó un paquete
+            {t.newPackage}
           </button>
         </div>
 
         {/* Stats */}
         <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '2rem'}}>
           {[
-            {label: 'Pendientes', value: pendientes, color: '#EF5350'},
-            {label: 'Retirados', value: retirados, color: '#1D9E75'},
-            {label: 'Total', value: packages.length, color: '#1565C0'},
+            {label: t.pending, value: pendientes, color: '#EF5350'},
+            {label: t.delivered, value: retirados, color: '#1D9E75'},
+            {label: t.total, value: packages.length, color: '#1565C0'},
           ].map(({label, value, color}) => (
             <div key={label} style={{background: 'white', borderRadius: '12px', padding: '1.5rem', textAlign: 'center', border: '0.5px solid #e0e0e0'}}>
               <p style={{fontSize: '32px', fontWeight: '500', color, margin: 0}}>{value}</p>
@@ -92,20 +97,17 @@ export default function ConserjedDashboard() {
         {/* Formulario nuevo paquete */}
         {showForm && (
           <div style={{background: 'white', borderRadius: '12px', border: '1.5px solid #1565C0', padding: '1.5rem', marginBottom: '1.5rem'}}>
-            <p style={{fontWeight: '500', margin: '0 0 1rem', color: '#1565C0'}}>Registrar nuevo paquete</p>
+            <p style={{fontWeight: '500', margin: '0 0 1rem', color: '#1565C0'}}>{t.registerPackage}</p>
             <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem'}}>
               {[
-                {label: 'Código de tracking', key: 'code', placeholder: 'PKG-004'},
-                {label: 'Número de depto', key: 'depto', placeholder: 'Ej. 301'},
-                {label: 'Nombre del residente', key: 'resident', placeholder: 'Ej. Carlos López'},
-                {label: 'Descripción', key: 'desc', placeholder: 'Ej. Caja mediana'},
+                {label: t.trackingCode, key: 'code', placeholder: 'PKG-004'},
+                {label: t.deptNumber, key: 'depto', placeholder: 'Ej. 301'},
+                {label: t.residentName, key: 'resident', placeholder: 'Ej. Carlos López'},
+                {label: t.description, key: 'desc', placeholder: 'Ej. Caja mediana'},
               ].map(({label, key, placeholder}) => (
                 <div key={key}>
                   <label style={{fontSize: '12px', color: '#777', marginBottom: '5px', display: 'block'}}>{label}</label>
-                  <input 
-                    type="text" 
-                    placeholder={placeholder}
-                    value={form[key]}
+                  <input type="text" placeholder={placeholder} value={form[key]}
                     onChange={(e) => setForm({...form, [key]: e.target.value})}
                     style={{width: '100%', padding: '10px 14px', border: '1.5px solid #e8e8e8', borderRadius: '8px', fontSize: '14px', outline: 'none', boxSizing: 'border-box', color: '#1a1a1a'}}/>
                 </div>
@@ -113,10 +115,10 @@ export default function ConserjedDashboard() {
             </div>
             <div style={{display: 'flex', gap: '1rem', marginTop: '1rem'}}>
               <button onClick={handleAdd} style={{padding: '10px 24px', background: '#1565C0', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px'}}>
-                Registrar
+                {t.save}
               </button>
               <button onClick={() => setShowForm(false)} style={{padding: '10px 24px', background: 'white', color: '#999', border: '1.5px solid #e0e0e0', borderRadius: '8px', cursor: 'pointer', fontSize: '14px'}}>
-                Cancelar
+                {t.cancel}
               </button>
             </div>
           </div>
@@ -125,7 +127,7 @@ export default function ConserjedDashboard() {
         {/* Lista de paquetes */}
         <div style={{background: 'white', borderRadius: '12px', border: '0.5px solid #e0e0e0', overflow: 'hidden'}}>
           <div style={{padding: '1rem 1.5rem', borderBottom: '0.5px solid #e0e0e0'}}>
-            <p style={{fontWeight: '500', margin: 0}}>Registro de encomiendas</p>
+            <p style={{fontWeight: '500', margin: 0}}>{t.packageList}</p>
           </div>
           {packages.map(({id, code, desc, depto, resident, status, date}) => (
             <div key={id} style={{padding: '1rem 1.5rem', borderBottom: '0.5px solid #f0f0f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
@@ -140,10 +142,9 @@ export default function ConserjedDashboard() {
                   padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '500'
                 }}>{status}</span>
                 {status === 'Pendiente' && (
-                  <button 
-                    onClick={() => handleDeliver(id)}
+                  <button onClick={() => handleDeliver(id)}
                     style={{padding: '6px 14px', background: '#1D9E75', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '12px'}}>
-                    Marcar entregado
+                    {t.markDelivered}
                   </button>
                 )}
               </div>

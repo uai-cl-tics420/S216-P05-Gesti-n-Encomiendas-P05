@@ -2,10 +2,12 @@
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useLanguage } from "../../context/LanguageContext";
 
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { t, lang, toggleLang } = useLanguage();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -46,23 +48,27 @@ export default function AdminDashboard() {
           <span style={{fontSize: '22px', fontWeight: '500', color: 'white'}}>Charge<span style={{color: '#EF5350'}}>.</span></span>
         </div>
         <div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
+          <button onClick={toggleLang}
+            style={{padding: '6px 14px', background: 'rgba(255,255,255,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.4)', borderRadius: '20px', cursor: 'pointer', fontSize: '13px'}}>
+            {lang === "es" ? "EN" : "ES"}
+          </button>
           <span style={{color: 'white', fontSize: '14px'}}>👤 {session?.user?.name}</span>
           <button onClick={() => signOut({ callbackUrl: '/' })} style={{padding: '8px 16px', background: '#EF5350', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '13px'}}>
-            Cerrar sesión
+            {t.logout}
           </button>
         </div>
       </div>
 
       <div style={{padding: '2rem', maxWidth: '900px', margin: '0 auto'}}>
-        <h1 style={{fontSize: '22px', fontWeight: '500', color: '#1a1a1a', margin: '0 0 4px'}}>Panel Admin</h1>
-        <p style={{fontSize: '14px', color: '#999', marginBottom: '2rem'}}>Gestión de usuarios del sistema</p>
+        <h1 style={{fontSize: '22px', fontWeight: '500', color: '#1a1a1a', margin: '0 0 4px'}}>{t.adminPanel}</h1>
+        <p style={{fontSize: '14px', color: '#999', marginBottom: '2rem'}}>{t.adminSubtitle}</p>
 
         {/* Stats */}
         <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '2rem'}}>
           {[
-            {label: 'Residentes', value: users.filter(u => u.role === 'residente').length, color: '#1D9E75'},
-            {label: 'Conserjes', value: users.filter(u => u.role === 'conserje').length, color: '#1565C0'},
-            {label: 'Admins', value: users.filter(u => u.role === 'admin').length, color: '#EF5350'},
+            {label: t.residents, value: users.filter(u => u.role === 'residente').length, color: '#1D9E75'},
+            {label: t.concierges, value: users.filter(u => u.role === 'conserje').length, color: '#1565C0'},
+            {label: t.admins, value: users.filter(u => u.role === 'admin').length, color: '#EF5350'},
           ].map(({label, value, color}) => (
             <div key={label} style={{background: 'white', borderRadius: '12px', padding: '1.5rem', textAlign: 'center', border: '0.5px solid #e0e0e0'}}>
               <p style={{fontSize: '32px', fontWeight: '500', color, margin: 0}}>{value}</p>
@@ -74,10 +80,10 @@ export default function AdminDashboard() {
         {/* Tabla usuarios */}
         <div style={{background: 'white', borderRadius: '12px', border: '0.5px solid #e0e0e0', overflow: 'hidden'}}>
           <div style={{padding: '1rem 1.5rem', borderBottom: '0.5px solid #e0e0e0'}}>
-            <p style={{fontWeight: '500', margin: 0}}>Usuarios registrados</p>
+            <p style={{fontWeight: '500', margin: 0}}>{t.registeredUsers}</p>
           </div>
           {loading ? (
-            <p style={{padding: '2rem', textAlign: 'center', color: '#999'}}>Cargando usuarios...</p>
+            <p style={{padding: '2rem', textAlign: 'center', color: '#999'}}>{t.loadingUsers}</p>
           ) : (
             users.map((user) => {
               const {bg, color} = roleColor(user.role);
@@ -91,14 +97,11 @@ export default function AdminDashboard() {
                     <span style={{background: bg, color, padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '500'}}>
                       {user.role}
                     </span>
-                    <select
-                      value={user.role}
-                      onChange={(e) => changeRole(user.id, e.target.value)}
-                      style={{padding: '6px 10px', border: '1.5px solid #e0e0e0', borderRadius: '8px', fontSize: '13px', cursor: 'pointer', outline: 'none'}}
-                    >
-                      <option value="residente">Residente</option>
-                      <option value="conserje">Conserje</option>
-                      <option value="admin">Admin</option>
+                    <select value={user.role} onChange={(e) => changeRole(user.id, e.target.value)}
+                      style={{padding: '6px 10px', border: '1.5px solid #e0e0e0', borderRadius: '8px', fontSize: '13px', cursor: 'pointer', outline: 'none'}}>
+                      <option value="residente">{t.residents}</option>
+                      <option value="conserje">{t.concierges}</option>
+                      <option value="admin">{t.admins}</option>
                     </select>
                   </div>
                 </div>
