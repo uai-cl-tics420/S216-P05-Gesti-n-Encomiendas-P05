@@ -127,12 +127,12 @@ export default function ConserjedDashboard() {
         {/* Lista de paquetes */}
         <div style={{background: 'white', borderRadius: '12px', border: '0.5px solid #e0e0e0', overflow: 'hidden'}}>
           <div style={{padding: '1rem 1.5rem', borderBottom: '0.5px solid #e0e0e0'}}>
-            <p style={{fontWeight: '500', margin: 0}}>{t.packageList}</p>
+            <p style={{fontWeight: '500', margin: 0, color: '#1a1a1a'}}>{t.packageList}</p>
           </div>
           {packages.map(({id, code, desc, depto, resident, status, date}) => (
             <div key={id} style={{padding: '1rem 1.5rem', borderBottom: '0.5px solid #f0f0f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
               <div>
-                <p style={{fontWeight: '500', margin: 0, fontSize: '14px'}}>{code} — {desc}</p>
+                <p style={{fontWeight: '500', margin: 0, fontSize: '14px', color: '#1a1a1a'}}>{code} — {desc}</p>
                 <p style={{color: '#999', margin: '2px 0 0', fontSize: '12px'}}>Depto {depto} · {resident} · {date}</p>
               </div>
               <div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>

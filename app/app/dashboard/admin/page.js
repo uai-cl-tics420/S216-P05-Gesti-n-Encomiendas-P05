@@ -80,7 +80,7 @@ export default function AdminDashboard() {
         {/* Tabla usuarios */}
         <div style={{background: 'white', borderRadius: '12px', border: '0.5px solid #e0e0e0', overflow: 'hidden'}}>
           <div style={{padding: '1rem 1.5rem', borderBottom: '0.5px solid #e0e0e0'}}>
-            <p style={{fontWeight: '500', margin: 0}}>{t.registeredUsers}</p>
+            <p style={{fontWeight: '500', margin: 0, color: '#1a1a1a'}}>{t.registeredUsers}</p>
           </div>
           {loading ? (
             <p style={{padding: '2rem', textAlign: 'center', color: '#999'}}>{t.loadingUsers}</p>
@@ -90,7 +90,7 @@ export default function AdminDashboard() {
               return (
                 <div key={user.id} style={{padding: '1rem 1.5rem', borderBottom: '0.5px solid #f0f0f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
                   <div>
-                    <p style={{fontWeight: '500', margin: 0, fontSize: '14px'}}>{user.full_name}</p>
+                    <p style={{fontWeight: '500', margin: 0, fontSize: '14px', color: '#1a1a1a'}}>{user.full_name}</p>
                     <p style={{color: '#999', margin: '2px 0 0', fontSize: '12px'}}>{user.email}</p>
                   </div>
                   <div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
@@ -98,7 +98,7 @@ export default function AdminDashboard() {
                       {user.role}
                     </span>
                     <select value={user.role} onChange={(e) => changeRole(user.id, e.target.value)}
-                      style={{padding: '6px 10px', border: '1.5px solid #e0e0e0', borderRadius: '8px', fontSize: '13px', cursor: 'pointer', outline: 'none'}}>
+                      style={{padding: '6px 10px', border: '1.5px solid #e0e0e0', borderRadius: '8px', fontSize: '13px', cursor: 'pointer', outline: 'none', color: '#1a1a1a'}}>
                       <option value="residente">{t.residents}</option>
                       <option value="conserje">{t.concierges}</option>
                       <option value="admin">{t.admins}</option>

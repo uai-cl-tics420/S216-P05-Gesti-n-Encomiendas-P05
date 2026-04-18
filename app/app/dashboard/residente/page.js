@@ -59,7 +59,7 @@ export default function ResidenteDashboard() {
         {/* Lista de paquetes */}
         <div style={{background: 'white', borderRadius: '12px', border: '0.5px solid #e0e0e0', overflow: 'hidden'}}>
           <div style={{padding: '1rem 1.5rem', borderBottom: '0.5px solid #e0e0e0'}}>
-            <p style={{fontWeight: '500', margin: 0}}>{t.recentPackages}</p>
+            <p style={{fontWeight: '500', margin: 0, color: '#1a1a1a'}}>{t.recentPackages}</p>
           </div>
           {[
             {code: 'PKG-001', desc: 'Caja Amazon', date: '15 Abr', status: t.pending, color: '#EF5350'},
@@ -67,7 +67,7 @@ export default function ResidenteDashboard() {
           ].map(({code, desc, date, status, color}) => (
             <div key={code} style={{padding: '1rem 1.5rem', borderBottom: '0.5px solid #f0f0f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
               <div>
-                <p style={{fontWeight: '500', margin: 0, fontSize: '14px'}}>{code} — {desc}</p>
+                <p style={{fontWeight: '500', margin: 0, fontSize: '14px', color: '#1a1a1a'}}>{code} — {desc}</p>
                 <p style={{color: '#999', margin: '2px 0 0', fontSize: '12px'}}>{date}</p>
               </div>
               <span style={{background: color + '20', color, padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '500'}}>{status}</span>
