@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+tsximport { useEffect, useState } from "react";
 import { useLanguage } from "../context/LanguageContext";
 
 export default function AdminDashboard() {
@@ -36,7 +36,7 @@ export default function AdminDashboard() {
   };
 
   return (
-    <main style={{minHeight: '100vh', background: '#f5f5f5', fontFamily: 'sans-serif'}}>
+    <main style={{minHeight: '100vh', background: '#f4f4f4', fontFamily: 'sans-serif'}}>
 
       {/* Header */}
       <div style={{background: 'linear-gradient(135deg, #1a2a6c, #1565C0)', padding: '1rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
@@ -64,7 +64,7 @@ export default function AdminDashboard() {
         <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '2rem'}}>
           {[
             {label: t.residents, value: users.filter(u => u.role === 'residente').length, color: '#1D9E75'},
-            {label: t.concierges, value: users.filter(u => u.role === 'conserje').length, color: '#1565C0'},
+            {label: t.concierges, value: users.filter(u => u.role === 'conserje').length, color: '#62a9fa'},
             {label: t.admins, value: users.filter(u => u.role === 'admin').length, color: '#EF5350'},
           ].map(({label, value, color}) => (
             <div key={label} style={{background: 'white', borderRadius: '12px', padding: '1.5rem', textAlign: 'center', border: '0.5px solid #e0e0e0'}}>
