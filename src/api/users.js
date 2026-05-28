@@ -1,6 +1,4 @@
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma } from "../lib/prisma.ts";
 
 export async function GET() {
   try {
@@ -17,22 +15,21 @@ export async function GET() {
     });
     return Response.json(users);
   } catch (error) {
+    console.error(error);
     return Response.json({ error: "Error al obtener usuarios" }, { status: 500 });
   }
 }
 
 export async function PATCH(request) {
   try {
-    const body = await request.json();
-    const { id, role } = body;
-
+    const { id, role } = await request.json();
     const user = await prisma.residents.update({
       where: { id },
       data: { role },
     });
-
     return Response.json({ message: "Rol actualizado", user });
   } catch (error) {
+    console.error(error);
     return Response.json({ error: "Error al actualizar rol" }, { status: 500 });
   }
 }

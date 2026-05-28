@@ -1,4 +1,4 @@
-tsximport { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useLanguage } from "../context/LanguageContext";
 
 export default function AdminDashboard() {

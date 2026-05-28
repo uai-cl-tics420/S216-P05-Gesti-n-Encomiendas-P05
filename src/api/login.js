@@ -1,5 +1,4 @@
-Porque cuando hiciste los cambios antes, no lo guardaste. Abre src/api/login.js en VS Code y pega esto:
-javascriptimport { prisma } from "../lib/prisma.ts";
+import { prisma } from "../lib/prisma.ts";
 import bcrypt from "bcryptjs";
 import { SignJWT } from "jose";
 
