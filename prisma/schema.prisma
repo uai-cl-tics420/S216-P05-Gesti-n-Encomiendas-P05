@@ -4,17 +4,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  
-}
-
-model concierges {
-  id         Int         @id @default(autoincrement())
-  full_name  String      @db.VarChar(100)
-  email      String      @db.VarChar(100)
-  shift      String?     @default("dia") @db.VarChar(20)
-  created_at DateTime?   @default(now()) @db.Timestamp(6)
-  packages   packages[]
-  transfers  transfers[]
 }
 
 model departments {
@@ -23,7 +12,6 @@ model departments {
   floor_number Int
   tower        String?     @default("A") @db.VarChar(10)
   created_at   DateTime?   @default(now()) @db.Timestamp(6)
-  packages     packages[]
   residents    residents[]
 }
 
@@ -44,16 +32,12 @@ model packages {
   tracking_code String          @db.VarChar(50)
   description   String?
   sender_name   String?         @db.VarChar(100)
-  department_id Int?
   resident_id   Int?
-  concierge_id  Int?
   is_perishable Boolean?        @default(false)
   status        String?         @default("pendiente") @db.VarChar(20)
   created_at    DateTime?       @default(now()) @db.Timestamp(6)
   updated_at    DateTime?       @default(now()) @db.Timestamp(6)
   notifications notifications[]
-  concierges    concierges?     @relation(fields: [concierge_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  departments   departments?    @relation(fields: [department_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   residents     residents?      @relation(fields: [resident_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   transfers     transfers[]
 }
@@ -74,14 +58,12 @@ model residents {
 }
 
 model transfers {
-  id                Int         @id @default(autoincrement())
+  id                Int        @id @default(autoincrement())
   package_id        Int?
-  verification_code String      @db.VarChar(100)
-  transferred_by    Int?
-  received_by       Int?
+  verification_code String     @db.VarChar(100)
+  resident_id       Int?
   notes             String?
-  created_at        DateTime?   @default(now()) @db.Timestamp(6)
-  packages          packages?   @relation(fields: [package_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  residents         residents?  @relation(fields: [received_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  concierges        concierges? @relation(fields: [transferred_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  created_at        DateTime?  @default(now()) @db.Timestamp(6)
+  packages          packages?  @relation(fields: [package_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  residents         residents? @relation(fields: [resident_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }

@@ -1,7 +1,6 @@
 export const translations = {
   es: {
     welcome: "Bienvenido",
-    loginSubtitle: "Ingresa al sistema inCharge",
     email: "Correo electrónico",
     password: "Contraseña",
     login: "Ingresar",
@@ -44,7 +43,6 @@ export const translations = {
   },
   en: {
     welcome: "Welcome",
-    loginSubtitle: "Sign in to inCharge",
     email: "Email address",
     password: "Password",
     login: "Sign in",

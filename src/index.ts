@@ -7,6 +7,7 @@ import { GET as getUsers, PATCH as patchUser } from "./api/users.js";
 import { Google, generateState, generateCodeVerifier, decodeIdToken } from "arctic";
 import { SignJWT } from "jose";
 import { prisma } from "./lib/prisma.ts";
+import { GET as getPackages, POST as createPackage, PATCH as deliverPackage } from "./api/packages.js";
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "incharge-secret-2026");
 
@@ -22,6 +23,7 @@ const server = serve({
     "/api/login": { POST: login },
     "/api/register": { POST: register },
     "/api/users": { GET: getUsers, PATCH: patchUser },
+    "/api/packages": { GET: getPackages, POST: createPackage, PATCH: deliverPackage },
 
     "/api/auth/google": {
       async GET() {
@@ -88,4 +90,4 @@ const server = serve({
   },
 });
 
-console.log(`🚀 Server running at ${server.url}`);
+console.log(`Server running at ${server.url}`);
