@@ -1,19 +1,16 @@
 import { useState, useEffect } from "react";
 import { useLanguage } from "../context/LanguageContext";
-
 interface User {
   id: number;
   name: string;
   email: string;
   role: string;
 }
-
 interface Resident {
   id: number;
   full_name: string;
 
 }
-
 interface Package {
   id: number;
   tracking_code: string;
@@ -23,7 +20,6 @@ interface Package {
   residents: { full_name: string };
   transfers: { verification_code: string }[];
 }
-
 export default function ConserjedDashboard({ user, onLogout }: { user: User; onLogout: () => void }) {
   const { t, lang, toggleLang } = useLanguage();
   const [packages, setPackages] = useState<Package[]>([]);
@@ -46,7 +42,6 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
     setToast({ msg, ok });
     setTimeout(() => setToast(null), 3000);
   };
-
   useEffect(() => {
     fetch("/api/packages", { headers: { Authorization: `Bearer ${token}` } })
       .then(res => res.json())
@@ -56,15 +51,12 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
       .then(res => res.json())
       .then(data => setResidents(data.filter((u: any) => u.role === "residente")));
   }, []);
-
   const handleAdd = async () => {
     if (!form.tracking_code || !form.resident_id) {
       showToast("Completa los campos requeridos", false);
       return;
     }
-
     const selectedResident = residents.find(r => r.id === parseInt(form.resident_id));
-
     const res = await fetch("/api/packages", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -76,21 +68,16 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
         is_perishable: form.is_perishable,
       }),
     });
-
     const data = await res.json();
     if (!res.ok) { showToast(data.error || "Error", false); return; }
-
     showToast(`Paquete registrado. ${data.otp}`);
     setPackages([data, ...packages]);
     setForm({ tracking_code: "", description: "", resident_id: "", is_perishable: false });
     setShowForm(false);
-
-    // Recargar paquetes
     fetch("/api/packages", { headers: { Authorization: `Bearer ${token}` } })
       .then(res => res.json())
       .then(data => setPackages(data));
   };
-
   const handleDeliver = async (packageId: number) => {
     const otp = otpInputs[packageId];
     if (!otp) { setOtpError({ ...otpError, [packageId]: "Ingresa el código" }); return; }
@@ -100,22 +87,18 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify({ package_id: packageId, otp, concierge_id: user.id }),
     });
-
     const data = await res.json();
     if (!res.ok) {
       setOtpError({ ...otpError, [packageId]: "Código incorrecto" });
       showToast("Código incorrecto", false);
       return;
     }
-
     showToast("Paquete entregado correctamente");
     setOtpError({ ...otpError, [packageId]: "" });
     setPackages(packages.map(p => p.id === packageId ? { ...p, status: "entregado" } : p));
   };
-
   const pendientes = packages.filter(p => p.status === "pendiente").length;
   const entregados = packages.filter(p => p.status === "entregado").length;
-
   return (
     <main style={{ minHeight: "100vh", background: "#f5f5f5", fontFamily: "sans-serif" }}>
       {/* Toast */}
@@ -224,6 +207,7 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
                 <div>
                   <p style={{ fontWeight: "500", margin: 0, fontSize: "14px", color: "#1a1a1a" }}>{pkg.tracking_code} – {pkg.description}</p>
                   <p style={{ color: "#999", margin: "2px 0 0", fontSize: "12px" }}>
+                    {pkg.residents?.full_name} · {new Date(pkg.created_at).toLocaleDateString()}
                   </p>
                 </div>
                 <span style={{

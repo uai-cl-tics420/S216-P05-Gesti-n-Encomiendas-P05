@@ -1,6 +1,6 @@
 import "./index.css";
 import { useState, useEffect } from "react";
-import { useLanguage } from "./context/LanguageContext";
+import { useI18nContext } from "./i18n/i18n-react.js";
 import AdminDashboard from "./dashboard/admin";
 import ConserjedDashboard from "./dashboard/conserje";
 import ResidenteDashboard from "./dashboard/residente";
@@ -13,7 +13,9 @@ export interface SessionUser {
 }
 
 export function App() {
-  const { t, lang, toggleLang } = useLanguage();
+  const { LL, locale, setLocale } = useI18nContext();
+  const lang = locale;
+  const toggleLang = () => setLocale(locale === 'es' ? 'en' : 'es');
   const [isLogin, setIsLogin] = useState(true);
   const [selectedRole, setSelectedRole] = useState("Residente");
   const [email, setEmail] = useState("");
@@ -137,7 +139,7 @@ export function App() {
           </div>
         </div>
         <p style={{ fontSize: "15px", color: "rgba(255,255,255,0.8)", lineHeight: 1.6 }}>
-          Gestión de encomiendas para edificios.
+          {LL.loginSubtitle()}
         </p>
         <div style={{ display: "flex", gap: "1.5rem" }}>
           {[["100%", "Digital"], ["24/7", lang === "es" ? "Disponible" : "Available"], ["QR", lang === "es" ? "Retiro seguro" : "Safe pickup"]].map(([num, label]) => (
@@ -155,16 +157,16 @@ export function App() {
       }}>
         <header style={{ marginBottom: "1.8rem" }}>
           <p style={{ fontSize: "20px", fontWeight: "600", color: "#1a1a1a", marginBottom: "4px" }}>
-            {isLogin ? t.welcome : t.createAccount}
+            {isLogin ? LL.welcome() : LL.createAccount()}
           </p>
           <p style={{ fontSize: "13px", color: "#999" }}>
-            {isLogin ? t.loginSubtitle : t.registerSubtitle}
+            {isLogin ? LL.loginSubtitle() : LL.registerSubtitle()}
           </p>
         </header>
 
         {!isLogin && (
           <div style={{ marginBottom: "1.5rem" }}>
-            <label style={{ fontSize: "12px", color: "#777", marginBottom: "8px", display: "block" }}>{t.userType}</label>
+            <label style={{ fontSize: "12px", color: "#777", marginBottom: "8px", display: "block" }}>{LL.userType()}</label>
             <div style={{ display: "flex", gap: "8px" }}>
               {roles.map((role) => (
                 <button key={role} onClick={() => setSelectedRole(role)} style={{
@@ -182,18 +184,18 @@ export function App() {
         <div style={{ display: "flex", flexDirection: "column", gap: "1.1rem" }}>
           {!isLogin && (
             <div>
-              <label style={{ fontSize: "12px", color: "#777", marginBottom: "5px", display: "block" }}>{t.fullName}</label>
+              <label style={{ fontSize: "12px", color: "#777", marginBottom: "5px", display: "block" }}>{LL.fullName()}</label>
               <input type="text" placeholder="Ej. Juan Pérez" value={fullName}
                 onChange={(e) => setFullName(e.target.value)} style={inputStyle} />
             </div>
           )}
           <div>
-            <label style={{ fontSize: "12px", color: "#777", marginBottom: "5px", display: "block" }}>{t.email}</label>
+            <label style={{ fontSize: "12px", color: "#777", marginBottom: "5px", display: "block" }}>{LL.email()}</label>
             <input type="email" placeholder="tu@correo.com" value={email}
               onChange={(e) => setEmail(e.target.value)} style={inputStyle} />
           </div>
           <div style={{ marginBottom: "0.4rem" }}>
-            <label style={{ fontSize: "12px", color: "#777", marginBottom: "5px", display: "block" }}>{t.password}</label>
+            <label style={{ fontSize: "12px", color: "#777", marginBottom: "5px", display: "block" }}>{LL.password()}</label>
             <input type="password" placeholder="••••••••" value={password}
               onChange={(e) => setPassword(e.target.value)} style={inputStyle} />
           </div>
@@ -204,14 +206,14 @@ export function App() {
           color: "white", border: "none", borderRadius: "10px", fontSize: "15px",
           fontWeight: "600", cursor: loading ? "not-allowed" : "pointer", marginTop: "1.5rem",
         }}>
-          {loading ? "..." : (isLogin ? t.login : t.register)}
+          {loading ? "..." : (isLogin ? LL.login() : LL.register())}
         </button>
 
         <div style={{
           textAlign: "center", color: "#ccc", fontSize: "11px",
           margin: "1.2rem 0", textTransform: "uppercase", letterSpacing: "1px",
         }}>
-          {t.or}
+          {LL.or()}
         </div>
 
         <button
@@ -223,14 +225,14 @@ export function App() {
             justifyContent: "center", gap: "8px",
           }}>
           <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" width="16" alt="google" />
-          {t.continueGoogle}
+          {LL.continueGoogle()}
         </button>
 
         <p style={{ textAlign: "center", fontSize: "13px", color: "#666", marginTop: "1.5rem" }}>
-          {isLogin ? t.noAccount : t.alreadyAccount}{" "}
+          {isLogin ? LL.noAccount() : LL.alreadyAccount()}{" "}
           <span onClick={() => setIsLogin(!isLogin)}
             style={{ color: "#1565C0", cursor: "pointer", fontWeight: "600", textDecoration: "underline" }}>
-            {isLogin ? t.register : t.signIn}
+            {isLogin ? LL.register() : LL.signIn()}
           </span>
         </p>
       </div>

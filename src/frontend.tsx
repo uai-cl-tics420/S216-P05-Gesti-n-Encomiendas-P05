@@ -1,17 +1,19 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { App } from "./App";
-import { LanguageProvider } from './context/LanguageContext';
+import TypesafeI18n from './i18n/i18n-react.js';
+import { loadAllLocales } from './i18n/i18n-util.sync.js';
+
+loadAllLocales();
 
 const rootElement = document.getElementById('root');
 
 if (rootElement) {
   ReactDOM.createRoot(rootElement).render(
     <React.StrictMode>
-      {/* EL PROVIDER DEBE ESTAR AQUÍ */}
-      <LanguageProvider>
+      <TypesafeI18n locale="es">
         <App />
-      </LanguageProvider>
+      </TypesafeI18n>
     </React.StrictMode>
   );
 }
