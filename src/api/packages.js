@@ -1,6 +1,6 @@
 import { prisma } from "../lib/prisma.ts";
 
-function generateOTP() {
+function generate_verification_code() {
   return Math.floor(1000 + Math.random() * 9000).toString();
 }
 
@@ -30,7 +30,7 @@ export async function POST(req) {
   try {
     const { tracking_code, description, resident_id, is_perishable } = await req.json();
 
-    const otp = generateOTP();
+    const verification_code = generate_verification_code();
 
     const pkg = await prisma.packages.create({
       data: {
@@ -45,11 +45,11 @@ export async function POST(req) {
     await prisma.transfers.create({
       data: {
         package_id: pkg.id,
-        verification_code: otp,
+        verification_code: verification_code,
       },
     });
 
-    return Response.json({ ...pkg, otp }, { status: 201 });
+    return Response.json({ ...pkg, verification_code }, { status: 201 });
   } catch (error) {
     console.error(error);
     return Response.json({ error: "Error al crear paquete" }, { status: 500 });
@@ -60,7 +60,7 @@ export async function PATCH(req) {
   try {
     const {
       package_id,
-      otp,
+      verification_code,
       receiver_name,
       receiver_rut
     } = await req.json();
@@ -68,7 +68,7 @@ export async function PATCH(req) {
     const transfer = await prisma.transfers.findFirst({
       where: {
         package_id: parseInt(package_id),
-        verification_code: otp,
+        verification_code: verification_code,
       },
     });
 

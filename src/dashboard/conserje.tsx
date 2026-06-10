@@ -41,7 +41,7 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
   const [deliveryForm, setDeliveryForm] = useState({
     receiver_name: "",
     receiver_rut: "",
-    otp: "",
+    verification_code: "",
   });
   const [viewPackage, setViewPackage] = useState<Package | null>(null);
   
@@ -87,7 +87,6 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
     });
     const data = await res.json();
     if (!res.ok) { showToast(data.error || "Error", false); return; }
-    showToast(`Paquete registrado. OTP: ${data.otp}`);
     setForm({ tracking_code: "", description: "", resident_id: "", is_perishable: false });
     setShowForm(false);
     fetch("/api/packages", { headers: { Authorization: `Bearer ${token}` } })
@@ -101,7 +100,7 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
     if (
       !deliveryForm.receiver_name ||
       !deliveryForm.receiver_rut ||
-      !deliveryForm.otp
+      !deliveryForm.verification_code
     ) {
       showToast("Completa todos los campos", false);
       return;
@@ -115,7 +114,7 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
       },
       body: JSON.stringify({
         package_id: selectedPackage.id,
-        otp: deliveryForm.otp,
+        verification_code: deliveryForm.verification_code,
         receiver_name: deliveryForm.receiver_name,
         receiver_rut: deliveryForm.receiver_rut
       }),
@@ -143,7 +142,7 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
     setDeliveryForm({
       receiver_name: "",
       receiver_rut: "",
-      otp: "",
+      verification_code: "",
     });
   };
   
@@ -415,8 +414,8 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
         }}
         >
         {pkg.status === "pendiente"
-          ? "Click para registrar entrega"
-          : "Click para ver detalle"}
+          ? "Registrar entrega"
+          : "Ver detalle"}
           </p>
           </div>
           </div>
@@ -601,11 +600,11 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
           <input
           type="text"
           maxLength={4}
-          value={deliveryForm.otp}
+          value={deliveryForm.verification_code}
           onChange={(e) =>
             setDeliveryForm({
               ...deliveryForm,
-              otp: e.target.value
+              verification_code: e.target.value
             })
           }
           style={{
