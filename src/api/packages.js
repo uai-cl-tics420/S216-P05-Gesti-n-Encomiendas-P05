@@ -58,24 +58,58 @@ export async function POST(req) {
 
 export async function PATCH(req) {
   try {
-    const { package_id, otp } = await req.json();
+    const {
+      package_id,
+      otp,
+      receiver_name,
+      receiver_rut
+    } = await req.json();
 
     const transfer = await prisma.transfers.findFirst({
-      where: { package_id: parseInt(package_id), verification_code: otp },
+      where: {
+        package_id: parseInt(package_id),
+        verification_code: otp,
+      },
     });
 
     if (!transfer) {
-      return Response.json({ error: "Código inválido" }, { status: 400 });
+      return Response.json(
+        { error: "Código inválido" },
+        { status: 400 }
+      );
     }
 
-    const pkg = await prisma.packages.update({
-      where: { id: parseInt(package_id) },
-      data: { status: "entregado" },
+    await prisma.transfers.update({
+      where: {
+        id: transfer.id,
+      },
+      data: {
+        receiver_name,
+        receiver_rut,
+        delivered_at: new Date(),
+      },
     });
 
-    return Response.json({ message: "Paquete entregado", pkg });
+    const pkg = await prisma.packages.update({
+      where: {
+        id: parseInt(package_id),
+      },
+      data: {
+        status: "entregado",
+      },
+    });
+
+    return Response.json({
+      message: "Paquete entregado",
+      pkg,
+    });
+
   } catch (error) {
     console.error(error);
-    return Response.json({ error: "Error al entregar paquete" }, { status: 500 });
+
+    return Response.json(
+      { error: "Error al entregar paquete" },
+      { status: 500 }
+    );
   }
 }
