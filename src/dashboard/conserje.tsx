@@ -1,16 +1,18 @@
 import { useState, useEffect } from "react";
-import { useLanguage } from "../context/LanguageContext";
+import { useI18nContext } from "../i18n/i18n-react.js";
+
 interface User {
   id: number;
   name: string;
   email: string;
   role: string;
 }
+
 interface Resident {
   id: number;
   full_name: string;
-
 }
+
 interface Package {
   id: number;
   tracking_code: string;
@@ -20,8 +22,11 @@ interface Package {
   residents: { full_name: string };
   transfers: { verification_code: string }[];
 }
+
 export default function ConserjedDashboard({ user, onLogout }: { user: User; onLogout: () => void }) {
-  const { t, lang, toggleLang } = useLanguage();
+  const { LL, locale, setLocale } = useI18nContext();
+  const lang = locale;
+  const toggleLang = () => setLocale(locale === 'es' ? 'en' : 'es');
   const [packages, setPackages] = useState<Package[]>([]);
   const [residents, setResidents] = useState<Resident[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,6 +47,7 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
     setToast({ msg, ok });
     setTimeout(() => setToast(null), 3000);
   };
+
   useEffect(() => {
     fetch("/api/packages", { headers: { Authorization: `Bearer ${token}` } })
       .then(res => res.json())
@@ -51,12 +57,12 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
       .then(res => res.json())
       .then(data => setResidents(data.filter((u: any) => u.role === "residente")));
   }, []);
+
   const handleAdd = async () => {
     if (!form.tracking_code || !form.resident_id) {
       showToast("Completa los campos requeridos", false);
       return;
     }
-    const selectedResident = residents.find(r => r.id === parseInt(form.resident_id));
     const res = await fetch("/api/packages", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -64,28 +70,26 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
         tracking_code: form.tracking_code,
         description: form.description,
         resident_id: form.resident_id,
-        concierge_id: user.id,
         is_perishable: form.is_perishable,
       }),
     });
     const data = await res.json();
     if (!res.ok) { showToast(data.error || "Error", false); return; }
-    showToast(`Paquete registrado. ${data.otp}`);
-    setPackages([data, ...packages]);
+    showToast(`Paquete registrado. OTP: ${data.otp}`);
     setForm({ tracking_code: "", description: "", resident_id: "", is_perishable: false });
     setShowForm(false);
     fetch("/api/packages", { headers: { Authorization: `Bearer ${token}` } })
       .then(res => res.json())
       .then(data => setPackages(data));
   };
+
   const handleDeliver = async (packageId: number) => {
     const otp = otpInputs[packageId];
     if (!otp) { setOtpError({ ...otpError, [packageId]: "Ingresa el código" }); return; }
-
     const res = await fetch("/api/packages", {
       method: "PATCH",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ package_id: packageId, otp, concierge_id: user.id }),
+      body: JSON.stringify({ package_id: packageId, otp }),
     });
     const data = await res.json();
     if (!res.ok) {
@@ -97,8 +101,10 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
     setOtpError({ ...otpError, [packageId]: "" });
     setPackages(packages.map(p => p.id === packageId ? { ...p, status: "entregado" } : p));
   };
+
   const pendientes = packages.filter(p => p.status === "pendiente").length;
   const entregados = packages.filter(p => p.status === "entregado").length;
+
   return (
     <main style={{ minHeight: "100vh", background: "#f5f5f5", fontFamily: "sans-serif" }}>
       {/* Toast */}
@@ -122,7 +128,7 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
           </button>
           <span style={{ color: "white", fontSize: "14px" }}>👤 {user.name}</span>
           <button onClick={onLogout} style={{ padding: "8px 16px", background: "#EF5350", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "13px" }}>
-            {t.logout}
+            {LL.logout()}
           </button>
         </div>
       </div>
@@ -130,20 +136,20 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
       <div style={{ padding: "2rem", maxWidth: "900px", margin: "0 auto" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
           <div>
-            <h1 style={{ fontSize: "22px", fontWeight: "500", color: "#1a1a1a", margin: 0 }}>{t.conciergePanel}</h1>
-            <p style={{ fontSize: "14px", color: "#999", margin: "4px 0 0" }}>{t.conciergeSubtitle}</p>
+            <h1 style={{ fontSize: "22px", fontWeight: "500", color: "#1a1a1a", margin: 0 }}>{LL.conciergePanel()}</h1>
+            <p style={{ fontSize: "14px", color: "#999", margin: "4px 0 0" }}>{LL.conciergeSubtitle()}</p>
           </div>
           <button onClick={() => setShowForm(!showForm)} style={{ padding: "10px 20px", background: "#1565C0", color: "white", border: "none", borderRadius: "10px", cursor: "pointer", fontSize: "14px", fontWeight: "500" }}>
-            {t.newPackage}
+            {LL.newPackage()}
           </button>
         </div>
 
         {/* Stats */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem", marginBottom: "2rem" }}>
           {[
-            { label: t.pending, value: pendientes, color: "#EF5350" },
-            { label: t.delivered, value: entregados, color: "#1D9E75" },
-            { label: t.total, value: packages.length, color: "#022042" },
+            { label: LL.pending(), value: pendientes, color: "#EF5350" },
+            { label: LL.delivered(), value: entregados, color: "#1D9E75" },
+            { label: LL.total(), value: packages.length, color: "#022042" },
           ].map(({ label, value, color }) => (
             <div key={label} style={{ background: "white", borderRadius: "12px", padding: "1.5rem", textAlign: "center", border: "0.5px solid #e0e0e0" }}>
               <p style={{ fontSize: "32px", fontWeight: "500", color, margin: 0 }}>{value}</p>
@@ -155,16 +161,16 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
         {/* Formulario nuevo paquete */}
         {showForm && (
           <div style={{ background: "white", borderRadius: "12px", border: "1.5px solid #1565C0", padding: "1.5rem", marginBottom: "1.5rem" }}>
-            <p style={{ fontWeight: "500", margin: "0 0 1rem", color: "#1565C0" }}>{t.registerPackage}</p>
+            <p style={{ fontWeight: "500", margin: "0 0 1rem", color: "#1565C0" }}>{LL.registerPackage()}</p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
               <div>
-                <label style={{ fontSize: "12px", color: "#777", marginBottom: "5px", display: "block" }}>{t.trackingCode} *</label>
+                <label style={{ fontSize: "12px", color: "#777", marginBottom: "5px", display: "block" }}>{LL.trackingCode()} *</label>
                 <input type="text" placeholder="PKG-004" value={form.tracking_code}
                   onChange={e => setForm({ ...form, tracking_code: e.target.value })}
                   style={{ width: "100%", padding: "10px 14px", border: "1.5px solid #e8e8e8", borderRadius: "8px", fontSize: "14px", outline: "none", boxSizing: "border-box" }} />
               </div>
               <div>
-                <label style={{ fontSize: "12px", color: "#777", marginBottom: "5px", display: "block" }}>{t.residentName} *</label>
+                <label style={{ fontSize: "12px", color: "#777", marginBottom: "5px", display: "block" }}>{LL.residentName()} *</label>
                 <select value={form.resident_id} onChange={e => setForm({ ...form, resident_id: e.target.value })}
                   style={{ width: "100%", padding: "10px 14px", border: "1.5px solid #e8e8e8", borderRadius: "8px", fontSize: "14px", outline: "none", boxSizing: "border-box" }}>
                   <option value="">Seleccionar residente</option>
@@ -174,7 +180,7 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
                 </select>
               </div>
               <div>
-                <label style={{ fontSize: "12px", color: "#777", marginBottom: "5px", display: "block" }}>{t.description}</label>
+                <label style={{ fontSize: "12px", color: "#777", marginBottom: "5px", display: "block" }}>{LL.description()}</label>
                 <input type="text" placeholder="Ej. Caja mediana" value={form.description}
                   onChange={e => setForm({ ...form, description: e.target.value })}
                   style={{ width: "100%", padding: "10px 14px", border: "1.5px solid #e8e8e8", borderRadius: "8px", fontSize: "14px", outline: "none", boxSizing: "border-box" }} />
@@ -186,8 +192,8 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
               </div>
             </div>
             <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
-              <button onClick={handleAdd} style={{ padding: "10px 24px", background: "#1565C0", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "14px" }}>{t.save}</button>
-              <button onClick={() => setShowForm(false)} style={{ padding: "10px 24px", background: "white", color: "#999", border: "1.5px solid #e0e0e0", borderRadius: "8px", cursor: "pointer", fontSize: "14px" }}>{t.cancel}</button>
+              <button onClick={handleAdd} style={{ padding: "10px 24px", background: "#1565C0", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "14px" }}>{LL.save()}</button>
+              <button onClick={() => setShowForm(false)} style={{ padding: "10px 24px", background: "white", color: "#999", border: "1.5px solid #e0e0e0", borderRadius: "8px", cursor: "pointer", fontSize: "14px" }}>{LL.cancel()}</button>
             </div>
           </div>
         )}
@@ -195,10 +201,10 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
         {/* Lista paquetes */}
         <div style={{ background: "white", borderRadius: "12px", border: "0.5px solid #e0e0e0", overflow: "hidden" }}>
           <div style={{ padding: "1rem 1.5rem", borderBottom: "0.5px solid #e0e0e0" }}>
-            <p style={{ fontWeight: "500", margin: 0, color: "#1a1a1a" }}>{t.packageList}</p>
+            <p style={{ fontWeight: "500", margin: 0, color: "#1a1a1a" }}>{LL.packageList()}</p>
           </div>
           {loading ? (
-            <p style={{ padding: "2rem", textAlign: "center", color: "#999" }}>{t.loadingUsers}</p>
+            <p style={{ padding: "2rem", textAlign: "center", color: "#999" }}>{LL.loadingUsers()}</p>
           ) : packages.length === 0 ? (
             <p style={{ padding: "2rem", textAlign: "center", color: "#999" }}>No hay paquetes</p>
           ) : packages.map(pkg => (
@@ -217,7 +223,7 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
                 }}>{pkg.status}</span>
               </div>
 
-              {/* Input para entregar */}
+              {/* Input OTP para entregar */}
               {pkg.status === "pendiente" && (
                 <div style={{ display: "flex", gap: "8px", marginTop: "10px", alignItems: "center" }}>
                   <input
@@ -232,7 +238,7 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
                     }}
                   />
                   <button onClick={() => handleDeliver(pkg.id)} style={{ padding: "8px 16px", background: "#1D9E75", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "13px" }}>
-                    {t.markDelivered}
+                    {LL.markDelivered()}
                   </button>
                   {otpError[pkg.id] && <span style={{ color: "#EF5350", fontSize: "12px" }}>{otpError[pkg.id]}</span>}
                 </div>
