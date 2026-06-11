@@ -41,7 +41,7 @@ export default function ResidenteDashboard({ user, onLogout }: { user: User; onL
 
   useEffect(() => {
     const token = localStorage.getItem("incharge_token");
-    fetch(`/api/packages?resident_id=${user.id}`, {
+    fetch(`/api/packages?user_id=${user.id}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(res => res.json())

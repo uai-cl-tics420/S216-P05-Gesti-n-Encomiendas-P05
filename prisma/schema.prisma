@@ -7,67 +7,88 @@ datasource db {
 }
 
 model departments {
-  id           Int         @id @default(autoincrement())
-  unit_number  String      @db.VarChar(10)
+  id           Int      @id @default(autoincrement())
+  unit_number  String   @db.VarChar(10)
   floor_number Int
-  tower        String?     @default("A") @db.VarChar(10)
-  created_at   DateTime?   @default(now()) @db.Timestamp(6)
-  residents    residents[]
+  tower        String?  @default("A") @db.VarChar(10)
+  created_at   DateTime? @default(now()) @db.Timestamp(6)
+
+  users user[]
 }
 
 model notifications {
-  id          Int        @id @default(autoincrement())
-  package_id  Int?
-  resident_id Int?
-  message     String
-  is_read     Boolean?   @default(false)
-  is_urgent   Boolean?   @default(false)
-  created_at  DateTime?  @default(now()) @db.Timestamp(6)
-  packages    packages?  @relation(fields: [package_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  residents   residents? @relation(fields: [resident_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id         Int       @id @default(autoincrement())
+  package_id Int?
+  user_id    Int?
+  message    String
+  is_read    Boolean?  @default(false)
+  is_urgent  Boolean?  @default(false)
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+
+  package packages? @relation(fields: [package_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user    user?     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model packages {
-  id            Int             @id @default(autoincrement())
-  tracking_code String          @db.VarChar(50)
+  id            Int       @id @default(autoincrement())
+  tracking_code String    @db.VarChar(50)
   description   String?
-  sender_name   String?         @db.VarChar(100)
-  resident_id   Int?
-  is_perishable Boolean?        @default(false)
-  status        String?         @default("pendiente") @db.VarChar(20)
-  created_at    DateTime?       @default(now()) @db.Timestamp(6)
-  updated_at    DateTime?       @default(now()) @db.Timestamp(6)
+  sender_name   String?   @db.VarChar(100)
+  user_id       Int?
+  is_perishable Boolean?  @default(false)
+  status        String?   @default("pendiente") @db.VarChar(20)
+  created_at    DateTime? @default(now()) @db.Timestamp(6)
+  updated_at    DateTime? @default(now()) @db.Timestamp(6)
+
+  user          user?           @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   notifications notifications[]
-  residents     residents?      @relation(fields: [resident_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   transfers     transfers[]
 }
 
-model residents {
-  id            Int             @id @default(autoincrement())
-  full_name     String          @db.VarChar(100)
-  email         String          @db.VarChar(100)
-  phone         String?         @db.VarChar(20)
+model user {
+  id            Int       @id @default(autoincrement())
+  name     String    @db.VarChar(100)
+  email         String    @unique @db.VarChar(100)
+  phone         String?   @db.VarChar(20)
   department_id Int?
-  created_at    DateTime?       @default(now()) @db.Timestamp(6)
-  password      String?         @db.VarChar(255)
-  role          String?         @default("residente") @db.VarChar(20)
+  created_at    DateTime? @default(now()) @db.Timestamp(6)
+  password      String?   @db.VarChar(255)
+  role          String?   @default("residente") @db.VarChar(20)
+
+  department    departments?   @relation(fields: [department_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
   notifications notifications[]
   packages      packages[]
-  departments   departments?    @relation(fields: [department_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   transfers     transfers[]
+  otpCodes      OtpCode[]
 }
 
 model transfers {
-  id                Int        @id @default(autoincrement())
+  id                Int       @id @default(autoincrement())
   package_id        Int?
-  verification_code String     @db.VarChar(100)
-  resident_id       Int?
+  verification_code String    @db.VarChar(100)
+  user_id           Int?
   notes             String?
-  created_at        DateTime?  @default(now()) @db.Timestamp(6)
-  packages          packages?  @relation(fields: [package_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  residents         residents? @relation(fields: [resident_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  created_at        DateTime? @default(now()) @db.Timestamp(6)
 
-  receiver_name     String?    @db.VarChar(100)
-  receiver_rut      String?    @db.VarChar(20)
-  delivered_at      DateTime?  @db.Timestamp(6)
+  receiver_name     String?   @db.VarChar(100)
+  receiver_rut      String?   @db.VarChar(20)
+  delivered_at      DateTime? @db.Timestamp(6)
+
+  package packages? @relation(fields: [package_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user    user?     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model OtpCode {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  code       String   @db.VarChar(6)
+  attempts   Int      @default(0)
+  used       Boolean  @default(false)
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  user user @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("otp_codes")
 }

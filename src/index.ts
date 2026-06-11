@@ -8,6 +8,7 @@ import { Google, generateState, generateCodeVerifier, decodeIdToken } from "arct
 import { SignJWT } from "jose";
 import { prisma } from "./lib/prisma.ts";
 import { GET as getPackages, POST as createPackage, PATCH as deliverPackage } from "./api/packages.js";
+import { POST as verifyOtp } from "./api/verify-otp.js";
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "incharge-secret-2026");
 
@@ -24,6 +25,7 @@ const server = serve({
     "/api/register": { POST: register },
     "/api/users": { GET: getUsers, PATCH: patchUser },
     "/api/packages": { GET: getPackages, POST: createPackage, PATCH: deliverPackage },
+    "/api/verify-otp": { POST: verifyOtp },
 
     "/api/auth/google": {
       async GET() {
@@ -56,21 +58,21 @@ const server = serve({
         const email = claims.email;
         const name = claims.name;
 
-        let user = await prisma.residents.findFirst({ where: { email } });
+        let user = await prisma.user.findFirst({ where: { email } });
         if (!user) {
-          user = await prisma.residents.create({
-            data: { full_name: name, email, role: "residente" },
+          user = await prisma.user.create({
+            data: { name: name, email, role: "residente" },
           });
         }
 
         const token = await new SignJWT({
-          id: user.id, email: user.email, name: user.full_name, role: user.role,
+          id: user.id, email: user.email, name: user.name, role: user.role,
         })
           .setProtectedHeader({ alg: "HS256" })
           .setExpirationTime("24h")
           .sign(JWT_SECRET);
 
-        const userData = JSON.stringify({ id: user.id, name: user.full_name, email: user.email, role: user.role });
+        const userData = JSON.stringify({ id: user.id, name: user.name, email: user.email, role: user.role });
 
         return new Response(
           `<script>

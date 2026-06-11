@@ -3,7 +3,6 @@ import { useI18nContext } from "../i18n/i18n-react.js";
 
 interface User {
   id: number;
-  full_name?: string;
   name?: string;
   email: string;
   role: string;
@@ -102,7 +101,7 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
               return (
                 <div key={u.id} style={{ padding: "1rem 1.5rem", borderBottom: "0.5px solid #f0f0f0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div>
-                    <p style={{ fontWeight: "500", margin: 0, fontSize: "14px", color: "#1a1a1a" }}>{u.full_name || u.name}</p>
+                    <p style={{ fontWeight: "500", margin: 0, fontSize: "14px", color: "#1a1a1a" }}>{u.name || u.name}</p>
                     <p style={{ color: "#999", margin: "2px 0 0", fontSize: "12px" }}>{u.email}</p>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>

@@ -25,6 +25,12 @@ export function App() {
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
   const [user, setUser] = useState<SessionUser | null>(null);
 
+  const [otpStep, setOtpStep] = useState(false);
+  const [pendingUserId, setPendingUserId] = useState<number | null>(null);
+  const [pendingEmail, setPendingEmail] = useState("");
+  const [otpCode, setOtpCode] = useState("");
+  const [resendCooldown, setResendCooldown] = useState(0);
+
   const roles = ["Residente", "Conserje", "Admin"];
 
   useEffect(() => {
@@ -32,6 +38,12 @@ export function App() {
     const token = localStorage.getItem("incharge_token");
     if (stored && token) setUser(JSON.parse(stored));
   }, []);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setTimeout(() => setResendCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [resendCooldown]);
 
   const showToast = (msg: string, ok = true) => {
     setToast({ msg, ok });
@@ -48,6 +60,17 @@ export function App() {
       });
       const data = await res.json();
       if (!res.ok) { showToast(data.error || "Error", false); return; }
+
+      if (data.otpRequired) {
+        setPendingUserId(data.userId);
+        setPendingEmail(data.email);
+        setOtpCode("");
+        setOtpStep(true);
+        setResendCooldown(30);
+        showToast(data.message || "Código OTP enviado");
+        return;
+      }
+
       localStorage.setItem("incharge_token", data.token);
       localStorage.setItem("incharge_user", JSON.stringify(data.user));
       setUser(data.user);
@@ -59,6 +82,67 @@ export function App() {
     }
   };
 
+  const handleVerifyOtp = async () => {
+    if (!pendingUserId) return;
+    setLoading(true);
+    try {
+      const res = await fetch("/api/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: pendingUserId, code: otpCode }),
+      });
+      const data = await res.json();
+      if (!res.ok) { showToast(data.error || "Error", false); return; }
+
+      localStorage.setItem("incharge_token", data.token);
+      localStorage.setItem("incharge_user", JSON.stringify(data.user));
+      setUser(data.user);
+      setOtpStep(false);
+      setOtpCode("");
+      setPendingUserId(null);
+      setPendingEmail("");
+      showToast("Sesión iniciada");
+    } catch {
+      showToast("Error de conexión", false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (resendCooldown > 0) return;
+    setLoading(true);
+    try {
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) { showToast(data.error || "Error", false); return; }
+
+      if (data.otpRequired) {
+        setPendingUserId(data.userId);
+        setPendingEmail(data.email);
+        setOtpCode("");
+        setResendCooldown(30);
+        showToast("Nuevo código enviado");
+      }
+    } catch {
+      showToast("Error de conexión", false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBackToLogin = () => {
+    setOtpStep(false);
+    setOtpCode("");
+    setPendingUserId(null);
+    setPendingEmail("");
+    setResendCooldown(0);
+  };
+
   const handleRegister = async () => {
     setLoading(true);
     try {
@@ -66,7 +150,7 @@ export function App() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          full_name: fullName,
+          name: fullName,
           email,
           password,
           role: selectedRole.toLowerCase(),
@@ -155,6 +239,61 @@ export function App() {
         background: "white", borderRadius: "20px", padding: "2.5rem 2rem",
         width: "100%", maxWidth: "380px", boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
       }}>
+        {otpStep ? (
+          <>
+            <header style={{ marginBottom: "1.8rem" }}>
+              <p style={{ fontSize: "20px", fontWeight: "600", color: "#1a1a1a", marginBottom: "4px" }}>
+                Verifica tu identidad
+              </p>
+              <p style={{ fontSize: "13px", color: "#999" }}>
+                Ingresa el código de 6 dígitos enviado a {pendingEmail}
+              </p>
+            </header>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "1.1rem" }}>
+              <div>
+                <label style={{ fontSize: "12px", color: "#777", marginBottom: "5px", display: "block" }}>Código OTP</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  placeholder="000000"
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  style={{ ...inputStyle, textAlign: "center", letterSpacing: "8px", fontSize: "20px", fontWeight: "600" }}
+                />
+              </div>
+            </div>
+
+            <button onClick={handleVerifyOtp} disabled={loading || otpCode.length !== 6} style={{
+              width: "100%", padding: "13px", background: (loading || otpCode.length !== 6) ? "#ccc" : "#EF5350",
+              color: "white", border: "none", borderRadius: "10px", fontSize: "15px",
+              fontWeight: "600", cursor: (loading || otpCode.length !== 6) ? "not-allowed" : "pointer", marginTop: "1.5rem",
+            }}>
+              {loading ? "..." : "Verificar código"}
+            </button>
+
+            <button
+              onClick={handleResendOtp}
+              disabled={resendCooldown > 0 || loading}
+              style={{
+                width: "100%", padding: "11px", background: "white",
+                color: resendCooldown > 0 ? "#bbb" : "#1565C0",
+                border: "1.5px solid #e0e0e0", borderRadius: "10px", fontSize: "13px",
+                cursor: (resendCooldown > 0 || loading) ? "not-allowed" : "pointer", marginTop: "0.8rem",
+              }}>
+              {resendCooldown > 0 ? `Reenviar código (${resendCooldown}s)` : "Reenviar código"}
+            </button>
+
+            <p style={{ textAlign: "center", fontSize: "13px", color: "#666", marginTop: "1.5rem" }}>
+              <span onClick={handleBackToLogin}
+                style={{ color: "#1565C0", cursor: "pointer", fontWeight: "600", textDecoration: "underline" }}>
+                Volver al inicio de sesión
+              </span>
+            </p>
+          </>
+        ) : (
+          <>
         <header style={{ marginBottom: "1.8rem" }}>
           <p style={{ fontSize: "20px", fontWeight: "600", color: "#1a1a1a", marginBottom: "4px" }}>
             {isLogin ? LL.welcome() : LL.createAccount()}
@@ -235,6 +374,8 @@ export function App() {
             {isLogin ? LL.register() : LL.signIn()}
           </span>
         </p>
+          </>
+        )}
       </div>
     </main>
   );

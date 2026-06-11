@@ -8,18 +8,13 @@ interface User {
   role: string;
 }
 
-interface Resident {
-  id: number;
-  full_name: string;
-}
-
 interface Package {
   id: number;
   tracking_code: string;
   description: string;
   status: string;
   created_at: string;
-  residents: { full_name: string };
+  users: { name: string };
   transfers: {
     verification_code: string;
     receiver_name?: string;
@@ -33,7 +28,7 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
   const lang = locale;
   const toggleLang = () => setLocale(locale === 'es' ? 'en' : 'es');
   const [packages, setPackages] = useState<Package[]>([]);
-  const [residents, setResidents] = useState<Resident[]>([]);
+  const [users, setusers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   
@@ -49,7 +44,7 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
   const [form, setForm] = useState({
     tracking_code: "",
     description: "",
-    resident_id: "",
+    user_id: "",
     is_perishable: false,
   });
   
@@ -67,11 +62,11 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
     
     fetch("/api/users", { headers: { Authorization: `Bearer ${token}` } })
     .then(res => res.json())
-    .then(data => setResidents(data.filter((u: any) => u.role === "residente")));
+    .then(data => setusers(data.filter((u: any) => u.role === "residente")));
   }, []);
   
   const handleAdd = async () => {
-    if (!form.tracking_code || !form.resident_id) {
+    if (!form.tracking_code || !form.user_id) {
       showToast("Completa los campos requeridos", false);
       return;
     }
@@ -81,13 +76,13 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
       body: JSON.stringify({
         tracking_code: form.tracking_code,
         description: form.description,
-        resident_id: form.resident_id,
+        user_id: form.user_id,
         is_perishable: form.is_perishable,
       }),
     });
     const data = await res.json();
     if (!res.ok) { showToast(data.error || "Error", false); return; }
-    setForm({ tracking_code: "", description: "", resident_id: "", is_perishable: false });
+    setForm({ tracking_code: "", description: "", user_id: "", is_perishable: false });
     setShowForm(false);
     fetch("/api/packages", { headers: { Authorization: `Bearer ${token}` } })
     .then(res => res.json())
@@ -273,11 +268,11 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
         </div>
         <div>
         <label style={{ fontSize: "12px", color: "#777", marginBottom: "5px", display: "block" }}>{LL.residentName()} *</label>
-        <select value={form.resident_id} onChange={e => setForm({ ...form, resident_id: e.target.value })}
+        <select value={form.user_id} onChange={e => setForm({ ...form, user_id: e.target.value })}
         style={{ width: "100%", padding: "10px 14px", border: "1.5px solid #e8e8e8", borderRadius: "8px", fontSize: "14px", outline: "none", boxSizing: "border-box" }}>
         <option value="">Seleccionar residente</option>
-        {residents.map(r => (
-          <option key={r.id} value={r.id}>{r.full_name}</option>
+        {users.map(r => (
+          <option key={r.id} value={r.id}>{r.name}</option>
         ))}
         </select>
         </div>
@@ -401,7 +396,7 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
           fontSize: "12px"
         }}
         >
-        {pkg.residents?.full_name}
+        {pkg.users?.name}
         </p>
         
         <p
@@ -538,7 +533,7 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
             color: "#888"
           }}
           >
-          {selectedPackage.residents?.full_name}
+          {selectedPackage.users?.name}
           </p>
           </div>
           
@@ -725,7 +720,7 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
           >
           <p><strong>Código:</strong> {viewPackage.tracking_code}</p>
           <p><strong>Descripción:</strong> {viewPackage.description}</p>
-          <p><strong>Residente:</strong> {viewPackage.residents?.full_name}</p>
+          <p><strong>Residente:</strong> {viewPackage.users?.name}</p>
           </div>
           
           <div

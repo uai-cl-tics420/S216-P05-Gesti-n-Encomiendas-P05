@@ -7,17 +7,20 @@ function generate_verification_code() {
 export async function GET(req) {
   try {
     const url = new URL(req.url);
-    const residentId = url.searchParams.get("resident_id");
-    const where = residentId ? { resident_id: parseInt(residentId) } : {};
-
+    const userId = url.searchParams.get("user_id");
+    const where = userId
+      ? { user_id: parseInt(userId) }
+      : {};
     const packages = await prisma.packages.findMany({
       where,
       include: {
-        residents: true,
+        user: true,
         transfers: true,
       },
-      orderBy: { created_at: "desc" },
-    });
+      orderBy: {
+        created_at: "desc",
+      },
+});
 
     return Response.json(packages);
   } catch (error) {
@@ -28,7 +31,12 @@ export async function GET(req) {
 
 export async function POST(req) {
   try {
-    const { tracking_code, description, resident_id, is_perishable } = await req.json();
+    const {
+      tracking_code,
+      description,
+      user_id,
+      is_perishable
+    } = await req.json();
 
     const verification_code = generate_verification_code();
 
@@ -36,7 +44,7 @@ export async function POST(req) {
       data: {
         tracking_code,
         description,
-        resident_id: parseInt(resident_id),
+        user_id: parseInt(user_id),
         is_perishable: is_perishable || false,
         status: "pendiente",
       },

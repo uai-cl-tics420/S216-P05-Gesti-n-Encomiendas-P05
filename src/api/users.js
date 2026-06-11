@@ -2,10 +2,10 @@ import { prisma } from "../lib/prisma.ts";
 
 export async function GET() {
   try {
-    const users = await prisma.residents.findMany({
+    const users = await prisma.user.findMany({
       select: {
         id: true,
-        full_name: true,
+        name: true,
         email: true,
         role: true,
         phone: true,
@@ -23,7 +23,7 @@ export async function GET() {
 export async function PATCH(request) {
   try {
     const { id, role } = await request.json();
-    const user = await prisma.residents.update({
+    const user = await prisma.user.update({
       where: { id },
       data: { role },
     });
