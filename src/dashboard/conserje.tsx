@@ -14,7 +14,7 @@ interface Package {
   description: string;
   status: string;
   created_at: string;
-  users: { name: string };
+  user: { name: string };
   transfers: {
     verification_code: string;
     receiver_name?: string;
@@ -396,7 +396,7 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
           fontSize: "12px"
         }}
         >
-        {pkg.users?.name}
+        {pkg.user?.name}
         </p>
         
         <p
@@ -533,7 +533,7 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
             color: "#888"
           }}
           >
-          {selectedPackage.users?.name}
+          {selectedPackage.user?.name}
           </p>
           </div>
           
@@ -720,7 +720,7 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
           >
           <p><strong>Código:</strong> {viewPackage.tracking_code}</p>
           <p><strong>Descripción:</strong> {viewPackage.description}</p>
-          <p><strong>Residente:</strong> {viewPackage.users?.name}</p>
+          <p><strong>Residente:</strong> {viewPackage.user?.name}</p>
           </div>
           
           <div
