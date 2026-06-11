@@ -1,4 +1,3 @@
-
 import { serve } from "bun";
 import index from "./index.html";
 import { POST as login } from "./api/login.js";
@@ -9,6 +8,7 @@ import { SignJWT } from "jose";
 import { prisma } from "./lib/prisma.ts";
 import { GET as getPackages, POST as createPackage, PATCH as deliverPackage } from "./api/packages.js";
 import { POST as verifyOtp } from "./api/verify-otp.js";
+import { GET as getNotifications, PATCH as readNotification } from "./api/notifications.js";
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "incharge-secret-2026");
 
@@ -26,6 +26,7 @@ const server = serve({
     "/api/users": { GET: getUsers, PATCH: patchUser },
     "/api/packages": { GET: getPackages, POST: createPackage, PATCH: deliverPackage },
     "/api/verify-otp": { POST: verifyOtp },
+    "/api/notifications": { GET: getNotifications, PATCH: readNotification },
 
     "/api/auth/google": {
       async GET() {

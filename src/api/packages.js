@@ -1,4 +1,5 @@
 import { prisma } from "../lib/prisma.ts";
+import { verifyAuth } from "../lib/auth.js";
 
 function generate_verification_code() {
   return Math.floor(1000 + Math.random() * 9000).toString();
@@ -6,11 +7,26 @@ function generate_verification_code() {
 
 export async function GET(req) {
   try {
+    const auth = await verifyAuth(req);
+
+    if (!auth) {
+      return Response.json(
+        { error: "No autorizado" },
+        { status: 401 }
+      );
+    }
+
     const url = new URL(req.url);
     const userId = url.searchParams.get("user_id");
-    const where = userId
-      ? { user_id: parseInt(userId) }
-      : {};
+
+    
+    let where = {};
+    if (auth.role === "residente") {
+      where = { user_id: auth.id };
+    } else if (userId) {
+      where = { user_id: parseInt(userId) };
+    }
+
     const packages = await prisma.packages.findMany({
       where,
       include: {
@@ -31,6 +47,16 @@ export async function GET(req) {
 
 export async function POST(req) {
   try {
+    const auth = await verifyAuth(req);
+
+    
+    if (!auth || (auth.role !== "conserje" && auth.role !== "admin")) {
+      return Response.json(
+        { error: "No autorizado" },
+        { status: 401 }
+      );
+    }
+
     const {
       tracking_code,
       description,
@@ -57,6 +83,19 @@ export async function POST(req) {
       },
     });
 
+    
+    
+    await prisma.notifications.create({
+      data: {
+        package_id: pkg.id,
+        user_id: parseInt(user_id),
+        message: is_perishable
+          ? `Tu paquete ${tracking_code} llegó a conserjería. ¡Es perecedero, retíralo pronto!`
+          : `Tu paquete ${tracking_code} llegó a conserjería`,
+        is_urgent: is_perishable || false,
+      },
+    });
+
     return Response.json({ ...pkg, verification_code }, { status: 201 });
   } catch (error) {
     console.error(error);
@@ -66,6 +105,16 @@ export async function POST(req) {
 
 export async function PATCH(req) {
   try {
+    const auth = await verifyAuth(req);
+
+    
+    if (!auth || (auth.role !== "conserje" && auth.role !== "admin")) {
+      return Response.json(
+        { error: "No autorizado" },
+        { status: 401 }
+      );
+    }
+
     const {
       package_id,
       verification_code,
