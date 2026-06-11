@@ -24,9 +24,10 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
   const toggleLang = () => setLocale(locale === 'es' ? 'en' : 'es');
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const token = localStorage.getItem("incharge_token");
 
   useEffect(() => {
-    fetch("/api/users")
+    fetch("/api/users", { headers: { Authorization: `Bearer ${token}` } })
       .then((res) => res.json())
       .then((data) => { setUsers(data || []); setLoading(false); })
       .catch(() => setLoading(false));
@@ -36,7 +37,7 @@ export default function AdminDashboard({ user, onLogout }: AdminDashboardProps) 
     try {
       await fetch("/api/users", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ id, role: newRole }),
       });
       setUsers((prev) => prev.map((u) => u.id === id ? { ...u, role: newRole } : u));
