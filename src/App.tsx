@@ -187,6 +187,13 @@ export function App() {
       display: "flex", alignItems: "center", justifyContent: "center",
       padding: "2rem", gap: "4rem", fontFamily: "sans-serif",
     }}>
+      <style>{`
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-4px); }
+        }
+      `}</style>
+
       {toast && (
         <div style={{
           position: "fixed", top: "1rem", left: "50%", transform: "translateX(-50%)",
@@ -207,14 +214,23 @@ export function App() {
         {lang === "es" ? "EN" : "ES"}
       </button>
 
+      {/* Branding */}
       <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", maxWidth: "280px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-          <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
-            <rect width="56" height="56" rx="14" fill="white" fillOpacity="0.15" />
-            <rect x="12" y="28" width="32" height="20" rx="4" fill="white" />
-            <path d="M10 26 L28 18 L46 26 L28 34 Z" fill="#EF5350" />
-            <path d="M28 10 L22 17 H26 V22 H30 V17 H34 Z" fill="white" />
-          </svg>
+          <div style={{
+            width: "56px", height: "56px", borderRadius: "14px",
+            background: "rgba(255,255,255,0.15)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            animation: "float 2s ease-in-out infinite",
+          }}>
+            <svg width="38" height="38" viewBox="0 0 38 38" fill="none">
+              <rect x="4" y="18" width="30" height="18" rx="3" fill="white"/>
+              <line x1="19" y1="18" x2="19" y2="36" stroke="#1565C0" strokeWidth="1.5"/>
+              <line x1="4" y1="24" x2="34" y2="24" stroke="#1565C0" strokeWidth="1"/>
+              <path d="M2 17 L19 10 L36 17 L19 24 Z" fill="#EF5350"/>
+              <path d="M19 2 L15 8 H17.5 V11 H20.5 V8 H23 Z" fill="white"/>
+            </svg>
+          </div>
           <div style={{ display: "flex", flexDirection: "column" }}>
             <span style={{ fontSize: "14px", color: "rgba(255,255,255,0.7)", letterSpacing: "4px", textTransform: "uppercase" }}>in</span>
             <span style={{ fontSize: "30px", fontWeight: "500", color: "white", letterSpacing: "-1px", lineHeight: 1 }}>
@@ -235,6 +251,7 @@ export function App() {
         </div>
       </div>
 
+      {/* Card */}
       <div style={{
         background: "white", borderRadius: "20px", padding: "2.5rem 2rem",
         width: "100%", maxWidth: "380px", boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
@@ -250,130 +267,122 @@ export function App() {
               </p>
             </header>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "1.1rem" }}>
-              <div>
-                <label style={{ fontSize: "12px", color: "#777", marginBottom: "5px", display: "block" }}>Código OTP</label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={6}
-                  placeholder="000000"
-                  value={otpCode}
-                  onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                  style={{ ...inputStyle, textAlign: "center", letterSpacing: "8px", fontSize: "20px", fontWeight: "600" }}
-                />
-              </div>
+            <div>
+              <label style={{ fontSize: "12px", color: "#777", marginBottom: "5px", display: "block" }}>Código OTP</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                placeholder="000000"
+                value={otpCode}
+                onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                style={{ ...inputStyle, textAlign: "center", letterSpacing: "8px", fontSize: "20px", fontWeight: "600" }}
+              />
             </div>
 
             <button onClick={handleVerifyOtp} disabled={loading || otpCode.length !== 6} style={{
-              width: "100%", padding: "13px", background: (loading || otpCode.length !== 6) ? "#ccc" : "#EF5350",
+              width: "100%", padding: "13px",
+              background: (loading || otpCode.length !== 6) ? "#ccc" : "#EF5350",
               color: "white", border: "none", borderRadius: "10px", fontSize: "15px",
               fontWeight: "600", cursor: (loading || otpCode.length !== 6) ? "not-allowed" : "pointer", marginTop: "1.5rem",
             }}>
               {loading ? "..." : "Verificar código"}
             </button>
 
-            <button
-              onClick={handleResendOtp}
-              disabled={resendCooldown > 0 || loading}
-              style={{
-                width: "100%", padding: "11px", background: "white",
-                color: resendCooldown > 0 ? "#bbb" : "#1565C0",
-                border: "1.5px solid #e0e0e0", borderRadius: "10px", fontSize: "13px",
-                cursor: (resendCooldown > 0 || loading) ? "not-allowed" : "pointer", marginTop: "0.8rem",
-              }}>
+            <button onClick={handleResendOtp} disabled={resendCooldown > 0 || loading} style={{
+              width: "100%", padding: "11px", background: "white",
+              color: resendCooldown > 0 ? "#bbb" : "#1565C0",
+              border: "1.5px solid #e0e0e0", borderRadius: "10px", fontSize: "13px",
+              cursor: (resendCooldown > 0 || loading) ? "not-allowed" : "pointer", marginTop: "0.8rem",
+            }}>
               {resendCooldown > 0 ? `Reenviar código (${resendCooldown}s)` : "Reenviar código"}
             </button>
 
             <p style={{ textAlign: "center", fontSize: "13px", color: "#666", marginTop: "1.5rem" }}>
-              <span onClick={handleBackToLogin}
-                style={{ color: "#1565C0", cursor: "pointer", fontWeight: "600", textDecoration: "underline" }}>
+              <span onClick={handleBackToLogin} style={{ color: "#1565C0", cursor: "pointer", fontWeight: "600", textDecoration: "underline" }}>
                 Volver al inicio de sesión
               </span>
             </p>
           </>
         ) : (
           <>
-        <header style={{ marginBottom: "1.8rem" }}>
-          <p style={{ fontSize: "20px", fontWeight: "600", color: "#1a1a1a", marginBottom: "4px" }}>
-            {isLogin ? LL.welcome() : LL.createAccount()}
-          </p>
-          <p style={{ fontSize: "13px", color: "#999" }}>
-            {isLogin ? LL.loginSubtitle() : LL.registerSubtitle()}
-          </p>
-        </header>
+            <header style={{ marginBottom: "1.8rem" }}>
+              <p style={{ fontSize: "20px", fontWeight: "600", color: "#1a1a1a", marginBottom: "4px" }}>
+                {isLogin ? LL.welcome() : LL.createAccount()}
+              </p>
+              <p style={{ fontSize: "13px", color: "#999" }}>
+                {isLogin ? LL.loginSubtitle() : LL.registerSubtitle()}
+              </p>
+            </header>
 
-        {!isLogin && (
-          <div style={{ marginBottom: "1.5rem" }}>
-            <label style={{ fontSize: "12px", color: "#777", marginBottom: "8px", display: "block" }}>{LL.userType()}</label>
-            <div style={{ display: "flex", gap: "8px" }}>
-              {roles.map((role) => (
-                <button key={role} onClick={() => setSelectedRole(role)} style={{
-                  flex: 1, padding: "8px 4px", borderRadius: "8px", fontSize: "11px",
-                  fontWeight: "500", border: "1.5px solid",
-                  borderColor: selectedRole === role ? "#1565C0" : "#e0e0e0",
-                  color: selectedRole === role ? "#1565C0" : "#999",
-                  background: selectedRole === role ? "#F0F7FF" : "white", cursor: "pointer",
-                }}>{role}</button>
-              ))}
+            {!isLogin && (
+              <div style={{ marginBottom: "1.5rem" }}>
+                <label style={{ fontSize: "12px", color: "#777", marginBottom: "8px", display: "block" }}>{LL.userType()}</label>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  {roles.map((role) => (
+                    <button key={role} onClick={() => setSelectedRole(role)} style={{
+                      flex: 1, padding: "8px 4px", borderRadius: "8px", fontSize: "11px",
+                      fontWeight: "500", border: "1.5px solid",
+                      borderColor: selectedRole === role ? "#1565C0" : "#e0e0e0",
+                      color: selectedRole === role ? "#1565C0" : "#999",
+                      background: selectedRole === role ? "#F0F7FF" : "white", cursor: "pointer",
+                    }}>{role}</button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "1.1rem" }}>
+              {!isLogin && (
+                <div>
+                  <label style={{ fontSize: "12px", color: "#777", marginBottom: "5px", display: "block" }}>{LL.fullName()}</label>
+                  <input type="text" placeholder="Ej. Juan Pérez" value={fullName}
+                    onChange={(e) => setFullName(e.target.value)} style={inputStyle} />
+                </div>
+              )}
+              <div>
+                <label style={{ fontSize: "12px", color: "#777", marginBottom: "5px", display: "block" }}>{LL.email()}</label>
+                <input type="email" placeholder="tu@correo.com" value={email}
+                  onChange={(e) => setEmail(e.target.value)} style={inputStyle} />
+              </div>
+              <div style={{ marginBottom: "0.4rem" }}>
+                <label style={{ fontSize: "12px", color: "#777", marginBottom: "5px", display: "block" }}>{LL.password()}</label>
+                <input type="password" placeholder="••••••••" value={password}
+                  onChange={(e) => setPassword(e.target.value)} style={inputStyle} />
+              </div>
             </div>
-          </div>
-        )}
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "1.1rem" }}>
-          {!isLogin && (
-            <div>
-              <label style={{ fontSize: "12px", color: "#777", marginBottom: "5px", display: "block" }}>{LL.fullName()}</label>
-              <input type="text" placeholder="Ej. Juan Pérez" value={fullName}
-                onChange={(e) => setFullName(e.target.value)} style={inputStyle} />
+            <button onClick={isLogin ? handleLogin : handleRegister} disabled={loading} style={{
+              width: "100%", padding: "13px", background: loading ? "#ccc" : "#EF5350",
+              color: "white", border: "none", borderRadius: "10px", fontSize: "15px",
+              fontWeight: "600", cursor: loading ? "not-allowed" : "pointer", marginTop: "1.5rem",
+            }}>
+              {loading ? "..." : (isLogin ? LL.login() : LL.register())}
+            </button>
+
+            <div style={{
+              textAlign: "center", color: "#ccc", fontSize: "11px",
+              margin: "1.2rem 0", textTransform: "uppercase", letterSpacing: "1px",
+            }}>
+              {LL.or()}
             </div>
-          )}
-          <div>
-            <label style={{ fontSize: "12px", color: "#777", marginBottom: "5px", display: "block" }}>{LL.email()}</label>
-            <input type="email" placeholder="tu@correo.com" value={email}
-              onChange={(e) => setEmail(e.target.value)} style={inputStyle} />
-          </div>
-          <div style={{ marginBottom: "0.4rem" }}>
-            <label style={{ fontSize: "12px", color: "#777", marginBottom: "5px", display: "block" }}>{LL.password()}</label>
-            <input type="password" placeholder="••••••••" value={password}
-              onChange={(e) => setPassword(e.target.value)} style={inputStyle} />
-          </div>
-        </div>
 
-        <button onClick={isLogin ? handleLogin : handleRegister} disabled={loading} style={{
-          width: "100%", padding: "13px", background: loading ? "#ccc" : "#EF5350",
-          color: "white", border: "none", borderRadius: "10px", fontSize: "15px",
-          fontWeight: "600", cursor: loading ? "not-allowed" : "pointer", marginTop: "1.5rem",
-        }}>
-          {loading ? "..." : (isLogin ? LL.login() : LL.register())}
-        </button>
+            <button onClick={() => window.location.href = "/api/auth/google"} style={{
+              width: "100%", padding: "11px", background: "white", color: "#444",
+              border: "1.5px solid #e0e0e0", borderRadius: "10px", fontSize: "13px",
+              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+            }}>
+              <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" width="16" alt="google" />
+              {LL.continueGoogle()}
+            </button>
 
-        <div style={{
-          textAlign: "center", color: "#ccc", fontSize: "11px",
-          margin: "1.2rem 0", textTransform: "uppercase", letterSpacing: "1px",
-        }}>
-          {LL.or()}
-        </div>
-
-        <button
-          onClick={() => window.location.href = "/api/auth/google"}
-          style={{
-            width: "100%", padding: "11px", background: "white", color: "#444",
-            border: "1.5px solid #e0e0e0", borderRadius: "10px", fontSize: "13px",
-            cursor: "pointer", display: "flex", alignItems: "center",
-            justifyContent: "center", gap: "8px",
-          }}>
-          <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" width="16" alt="google" />
-          {LL.continueGoogle()}
-        </button>
-
-        <p style={{ textAlign: "center", fontSize: "13px", color: "#666", marginTop: "1.5rem" }}>
-          {isLogin ? LL.noAccount() : LL.alreadyAccount()}{" "}
-          <span onClick={() => setIsLogin(!isLogin)}
-            style={{ color: "#1565C0", cursor: "pointer", fontWeight: "600", textDecoration: "underline" }}>
-            {isLogin ? LL.register() : LL.signIn()}
-          </span>
-        </p>
+            <p style={{ textAlign: "center", fontSize: "13px", color: "#666", marginTop: "1.5rem" }}>
+              {isLogin ? LL.noAccount() : LL.alreadyAccount()}{" "}
+              <span onClick={() => setIsLogin(!isLogin)}
+                style={{ color: "#1565C0", cursor: "pointer", fontWeight: "600", textDecoration: "underline" }}>
+                {isLogin ? LL.register() : LL.signIn()}
+              </span>
+            </p>
           </>
         )}
       </div>
