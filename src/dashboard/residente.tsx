@@ -23,12 +23,23 @@ interface Package {
   }[];
 }
 
+interface Notification {
+  id: number;
+  message: string;
+  is_read: boolean;
+  is_urgent: boolean;
+  created_at: string;
+}
+
 export default function ResidenteDashboard({ user, onLogout }: { user: User; onLogout: () => void }) {
   const { LL, locale, setLocale } = useI18nContext();
   const lang = locale;
   const toggleLang = () => setLocale(locale === 'es' ? 'en' : 'es');
   const [packages, setPackages] = useState<Package[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   const [viewPackage, setViewPackage] =
     useState<Package | null>(null);
@@ -39,14 +50,34 @@ export default function ResidenteDashboard({ user, onLogout }: { user: User; onL
     return pkg.status === filter;
   });
 
+  const token = localStorage.getItem("incharge_token");
+
   useEffect(() => {
-    const token = localStorage.getItem("incharge_token");
     fetch(`/api/packages?user_id=${user.id}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(res => res.json())
       .then(data => { setPackages(data); setLoading(false); });
+
+    fetch("/api/notifications", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(res => res.json())
+      .then(data => setNotifications(data));
   }, []);
+
+  const unread = notifications.filter(n => !n.is_read).length;
+
+  const markAsRead = async (id: number) => {
+    await fetch("/api/notifications", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ id }),
+    });
+    setNotifications(prev =>
+      prev.map(n => (n.id === id ? { ...n, is_read: true } : n))
+    );
+  };
 
   const pendientes = packages.filter(p => p.status === "pendiente").length;
   const entregados = packages.filter(p => p.status === "entregado").length;
@@ -57,6 +88,66 @@ export default function ResidenteDashboard({ user, onLogout }: { user: User; onL
       <div style={{ background: "linear-gradient(135deg, #1a2a6c, #1565C0)", padding: "1rem 2rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span style={{ fontSize: "22px", fontWeight: "500", color: "white" }}>in<span style={{ color: "#EF5350" }}>Charge.</span></span>
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+          <div style={{ position: "relative" }}>
+            <button
+              onClick={() => setShowNotifications(!showNotifications)}
+              style={{ background: "rgba(255,255,255,0.2)", border: "1px solid rgba(255,255,255,0.4)", borderRadius: "50%", width: "38px", height: "38px", cursor: "pointer", fontSize: "16px", position: "relative" }}
+            >
+              🔔
+              {unread > 0 && (
+                <span style={{
+                  position: "absolute", top: "-4px", right: "-4px",
+                  background: "#EF5350", color: "white", borderRadius: "50%",
+                  minWidth: "18px", height: "18px", fontSize: "11px", fontWeight: 700,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  padding: "0 4px", border: "2px solid #1565C0"
+                }}>
+                  {unread}
+                </span>
+              )}
+            </button>
+
+            {showNotifications && (
+              <div style={{
+                position: "absolute", top: "48px", right: 0, width: "320px",
+                background: "white", borderRadius: "12px", boxShadow: "0 8px 30px rgba(0,0,0,0.2)",
+                zIndex: 9999, overflow: "hidden"
+              }}>
+                <div style={{ padding: "12px 16px", borderBottom: "0.5px solid #e0e0e0", fontWeight: 600, fontSize: "14px", color: "#1a1a1a" }}>
+                  {LL.notifications()}
+                </div>
+                {notifications.length === 0 ? (
+                  <p style={{ padding: "1.5rem", textAlign: "center", color: "#999", fontSize: "13px" }}>
+                    {LL.noNotifications()}
+                  </p>
+                ) : (
+                  <div style={{ maxHeight: "320px", overflowY: "auto" }}>
+                    {notifications.map(n => (
+                      <div
+                        key={n.id}
+                        onClick={() => markAsRead(n.id)}
+                        style={{
+                          padding: "12px 16px",
+                          borderBottom: "0.5px solid #f0f0f0",
+                          background: n.is_read ? "white" : "#F0F7FF",
+                          cursor: "pointer"
+                        }}
+                      >
+                        <p style={{ margin: 0, fontSize: "13px", color: "#1a1a1a", display: "flex", gap: "6px" }}>
+                          {n.is_urgent && <span>⚠️</span>}
+                          {n.message}
+                        </p>
+                        <p style={{ margin: "4px 0 0", fontSize: "11px", color: "#999" }}>
+                          {new Date(n.created_at).toLocaleString()}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           <button onClick={toggleLang} style={{ padding: "6px 14px", background: "rgba(255,255,255,0.2)", color: "white", border: "1px solid rgba(255,255,255,0.4)", borderRadius: "20px", cursor: "pointer", fontSize: "13px" }}>
             {lang === "es" ? "EN" : "ES"}
           </button>
@@ -345,22 +436,6 @@ export default function ResidenteDashboard({ user, onLogout }: { user: User; onL
       : "Información del retiro"}
   </p>
 </div>
-
-        <div>
-          <h2 style={{ margin: 0 }}>
-            Entrega Registrada
-          </h2>
-
-          <p
-            style={{
-              margin: "4px 0 0",
-              color: "#777",
-              fontSize: "13px"
-            }}
-          >
-            Información del retiro
-          </p>
-        </div>
       </div>
 
       <div

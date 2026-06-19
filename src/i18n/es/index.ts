@@ -42,6 +42,8 @@ const es = {
   admins: 'Admins',
   registeredUsers: 'Usuarios registrados',
   loadingUsers: 'Cargando usuarios...',
+  notifications: 'Notificaciones',
+  noNotifications: 'No tienes notificaciones',
 } satisfies BaseTranslation
 
 export default es

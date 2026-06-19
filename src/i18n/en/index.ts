@@ -42,6 +42,8 @@ const en = {
   admins: 'Admins',
   registeredUsers: 'Registered users',
   loadingUsers: 'Loading users...',
+  notifications: 'Notifications',
+  noNotifications: 'You have no notifications',
 } satisfies Translation
 
 export default en
