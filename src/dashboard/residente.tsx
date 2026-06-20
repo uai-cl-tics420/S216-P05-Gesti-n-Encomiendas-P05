@@ -31,6 +31,19 @@ interface Notification {
   created_at: string;
 }
 
+interface ComplaintForm {
+  package_id: string;
+  title: string;
+  description: string;
+}
+interface Complaint {
+  id: number;
+  title: string;
+  description: string;
+  status: string;
+  created_at: string;
+}
+
 export default function ResidenteDashboard({ user, onLogout }: { user: User; onLogout: () => void }) {
   const { LL, locale, setLocale } = useI18nContext();
   const lang = locale;
@@ -77,6 +90,68 @@ export default function ResidenteDashboard({ user, onLogout }: { user: User; onL
     setNotifications(prev =>
       prev.map(n => (n.id === id ? { ...n, is_read: true } : n))
     );
+  };
+
+  const [complaints, setComplaints] = useState<Complaint[]>([]);
+  const [showComplaints, setShowComplaints] = useState(false);
+
+  const [showComplaintForm, setShowComplaintForm] = useState(false);
+  const [complaintForm, setComplaintForm] =
+    useState<ComplaintForm>({
+      package_id: "",
+      title: "",
+      description: "",
+    });
+
+  const handleComplaint = async () => {
+  if (!complaintForm.title.trim()) {
+    alert("Ingresa un título");
+    return;
+  }
+  const res = await fetch("/api/complaints", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      user_id: user.id,
+      package_id:
+        complaintForm.package_id || null,
+      title: complaintForm.title,
+      description: complaintForm.description,
+    }),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    alert(data.error || "Error al crear reclamo");
+    return;
+  }
+  alert("Reclamo enviado correctamente");
+  setComplaintForm({
+    package_id: "",
+    title: "",
+    description: "",
+  });
+  await loadComplaints();
+  setShowComplaintForm(false);
+  };
+
+  const loadComplaints = async () => {
+  const res = await fetch(
+    `/api/complaints?user_id=${user.id}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  const data = await res.json();
+
+  if (res.ok) {
+    setComplaints(data);
+  }
   };
 
   const pendientes = packages.filter(p => p.status === "pendiente").length;
@@ -159,9 +234,67 @@ export default function ResidenteDashboard({ user, onLogout }: { user: User; onL
       </div>
 
       <div style={{ padding: "2rem", maxWidth: "900px", margin: "0 auto" }}>
-        <h1 style={{ fontSize: "22px", fontWeight: "500", color: "#1a1a1a", marginBottom: "4px" }}>{LL.myPackages()}</h1>
-        <p style={{ fontSize: "14px", color: "#999", marginBottom: "2rem" }}>{LL.welcome()}, {user.name}</p>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "2rem",
+          }}
+        >
+          <div>
+            <h1
+              style={{
+                fontSize: "22px",
+                fontWeight: "500",
+                color: "#1a1a1a",
+                marginBottom: "4px",
+              }}
+            >
+              {LL.myPackages()}
+            </h1>
 
+            <p
+              style={{
+                fontSize: "14px",
+                color: "#999",
+              }}
+            >
+              {LL.welcome()}, {user.name}
+            </p>
+          </div>
+          <div style={{ display: "flex", gap: "10px" }}>
+            <button
+              onClick={() => {
+                loadComplaints();
+                setShowComplaints(true);
+              }}
+              style={{
+                padding: "10px 18px",
+                background: "#1565C0",
+                color: "white",
+                border: "none",
+                borderRadius: "10px",
+                cursor: "pointer"
+              }}
+            >
+              Mis Reclamos
+            </button>
+            <button
+              onClick={() => setShowComplaintForm(true)}
+              style={{
+                padding: "10px 18px",
+                background: "#EF5350",
+                color: "white",
+                border: "none",
+                borderRadius: "10px",
+                cursor: "pointer"
+              }}
+            >
+              Crear Reclamo
+            </button>
+          </div>
+        </div>
         {/* Stats */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem", marginBottom: "2rem" }}>
           {[
@@ -331,18 +464,18 @@ export default function ResidenteDashboard({ user, onLogout }: { user: User; onL
           {new Date(pkg.created_at).toLocaleDateString()}
         </p>
         <p
-  style={{
-    color: "#1565C0",
-    marginTop: "8px",
-    marginBottom: 0,
-    fontSize: "12px",
-    fontWeight: 500
-  }}
->
-  {pkg.status === "pendiente"
-    ? "Ver código de retiro"
-    : "Ver detalle"}
-</p>
+          style={{
+            color: "#1565C0",
+            marginTop: "8px",
+            marginBottom: 0,
+            fontSize: "12px",
+            fontWeight: 500
+          }}
+        >
+          {pkg.status === "pendiente"
+            ? "Ver código de retiro"
+            : "Ver detalle"}
+        </p>
       </div>
     </div>
 
@@ -552,6 +685,383 @@ export default function ResidenteDashboard({ user, onLogout }: { user: User; onL
           }}
         >
           Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+{showComplaintForm && (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.5)",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      zIndex: 9999,
+    }}
+  >
+    <div
+      style={{
+        background: "white",
+        width: "500px",
+        borderRadius: "12px",
+        padding: "24px",
+      }}
+    >
+      <h2>Nuevo Reclamo</h2>
+
+      <div style={{ marginBottom: "12px" }}>
+        <label>Paquete relacionado</label>
+
+        <select
+          value={complaintForm.package_id}
+          onChange={(e) =>
+            setComplaintForm({
+              ...complaintForm,
+              package_id: e.target.value,
+            })
+          }
+          style={{
+            width: "100%",
+            padding: "10px",
+            marginTop: "6px",
+          }}
+        >
+          <option value="">
+            Sin paquete asociado
+          </option>
+
+          {packages.map((pkg) => (
+            <option
+              key={pkg.id}
+              value={pkg.id}
+            >
+              {pkg.tracking_code}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div style={{ marginBottom: "12px" }}>
+        <label>Título</label>
+
+        <input
+          type="text"
+          value={complaintForm.title}
+          onChange={(e) =>
+            setComplaintForm({
+              ...complaintForm,
+              title: e.target.value,
+            })
+          }
+          style={{
+            width: "100%",
+            padding: "10px",
+            marginTop: "6px",
+            boxSizing: "border-box",
+          }}
+        />
+      </div>
+
+      <div style={{ marginBottom: "20px" }}>
+        <label>Descripción</label>
+
+        <textarea
+          value={complaintForm.description}
+          onChange={(e) =>
+            setComplaintForm({
+              ...complaintForm,
+              description: e.target.value,
+            })
+          }
+          rows={5}
+          style={{
+            width: "100%",
+            padding: "10px",
+            marginTop: "6px",
+            boxSizing: "border-box",
+          }}
+        />
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          gap: "10px",
+        }}
+      >
+        <button
+          onClick={() =>
+            setShowComplaintForm(false)
+          }
+        >
+          Cancelar
+        </button>
+
+        <button
+          onClick={handleComplaint}
+          style={{
+            background: "#EF5350",
+            color: "white",
+            border: "none",
+            padding: "10px 16px",
+            borderRadius: "8px",
+          }}
+        >
+          Enviar Reclamo
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+    {showComplaintForm && (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.5)",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      zIndex: 9999,
+    }}
+  >
+    <div
+      style={{
+        background: "white",
+        width: "600px",
+        borderRadius: "14px",
+        padding: "24px",
+        boxShadow: "0 8px 30px rgba(0,0,0,0.2)",
+      }}
+    >
+      {/* Header */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "12px",
+          marginBottom: "20px",
+        }}
+      >
+        <div
+          style={{
+            width: "50px",
+            height: "50px",
+            borderRadius: "12px",
+            background: "#FFF3E0",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "24px",
+          }}
+        >
+          📝
+        </div>
+
+        <div>
+          <h2
+            style={{
+              margin: 0,
+              color: "#1a1a1a",
+            }}
+          >
+            Crear Reclamo
+          </h2>
+
+          <p
+            style={{
+              margin: "4px 0 0",
+              color: "#777",
+              fontSize: "13px",
+            }}
+          >
+            Describe el problema para que sea revisado por conserjería.
+          </p>
+        </div>
+      </div>
+
+      {/* Paquete */}
+      <div style={{ marginBottom: "16px" }}>
+        <label
+          style={{
+            display: "block",
+            marginBottom: "8px",
+            fontWeight: 600,
+            color: "#374151",
+          }}
+        >
+          📦 Paquete relacionado (opcional)
+        </label>
+
+        <select
+          value={complaintForm.package_id}
+          onChange={(e) =>
+            setComplaintForm({
+              ...complaintForm,
+              package_id: e.target.value,
+            })
+          }
+          style={{
+            width: "100%",
+            padding: "12px",
+            borderRadius: "10px",
+            border: "1px solid #d1d5db",
+            fontSize: "14px",
+            background: "white",
+          }}
+        >
+          <option value="">
+            Sin paquete asociado
+          </option>
+
+          {packages.map((pkg) => (
+            <option
+              key={pkg.id}
+              value={pkg.id}
+            >
+              {pkg.tracking_code}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Título */}
+      <div style={{ marginBottom: "16px" }}>
+        <label
+          style={{
+            display: "block",
+            marginBottom: "8px",
+            fontWeight: 600,
+            color: "#374151",
+          }}
+        >
+          📌 Título del reclamo
+        </label>
+
+        <input
+          type="text"
+          placeholder="Ej: Problema con entrega de paquete"
+          value={complaintForm.title}
+          onChange={(e) =>
+            setComplaintForm({
+              ...complaintForm,
+              title: e.target.value,
+            })
+          }
+          style={{
+            width: "100%",
+            padding: "12px",
+            borderRadius: "10px",
+            border: "1px solid #d1d5db",
+            fontSize: "14px",
+            boxSizing: "border-box",
+          }}
+        />
+      </div>
+
+      {/* Descripción */}
+      <div style={{ marginBottom: "20px" }}>
+        <label
+          style={{
+            display: "block",
+            marginBottom: "8px",
+            fontWeight: 600,
+            color: "#374151",
+          }}
+        >
+          💬 Descripción
+        </label>
+
+        <textarea
+          value={complaintForm.description}
+          onChange={(e) =>
+            setComplaintForm({
+              ...complaintForm,
+              description: e.target.value,
+            })
+          }
+          rows={6}
+          placeholder="Describe detalladamente el problema..."
+          style={{
+            width: "100%",
+            padding: "12px",
+            borderRadius: "10px",
+            border: "1px solid #d1d5db",
+            fontSize: "14px",
+            resize: "vertical",
+            boxSizing: "border-box",
+            fontFamily: "inherit",
+          }}
+        />
+      </div>
+
+      {/* Resumen */}
+      <div
+        style={{
+          background: "#F8FAFC",
+          border: "1px solid #E2E8F0",
+          borderRadius: "10px",
+          padding: "14px",
+          marginBottom: "20px",
+        }}
+      >
+        <p
+          style={{
+            margin: 0,
+            fontSize: "13px",
+            color: "#64748B",
+          }}
+        >
+          ⚠️ Los reclamos serán revisados por conserjería y su estado podrá cambiar a:
+          <strong> Pendiente</strong>,
+          <strong> En revisión</strong>,
+          <strong> Resuelto</strong> o
+          <strong> Rechazado</strong>.
+        </p>
+      </div>
+
+      {/* Botones */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          gap: "10px",
+        }}
+      >
+        <button
+          onClick={() =>
+            setShowComplaintForm(false)
+          }
+          style={{
+            background: "white",
+            color: "#6B7280",
+            border: "1px solid #d1d5db",
+            padding: "10px 16px",
+            borderRadius: "8px",
+            cursor: "pointer",
+            fontWeight: 500,
+          }}
+        >
+          Cancelar
+        </button>
+
+        <button
+          onClick={handleComplaint}
+          style={{
+            background: "#EF5350",
+            color: "white",
+            border: "none",
+            padding: "10px 18px",
+            borderRadius: "8px",
+            cursor: "pointer",
+            fontWeight: 600,
+          }}
+        >
+          📨 Enviar Reclamo
         </button>
       </div>
     </div>

@@ -43,6 +43,7 @@ model packages {
   user          user?           @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   notifications notifications[]
   transfers     transfers[]
+  claims claims[]
 }
 
 model user {
@@ -61,6 +62,7 @@ model user {
   packages      packages[]
   transfers     transfers[]
   otpCodes      OtpCode[]
+  claims claims[]
 }
 
 model transfers {
@@ -91,4 +93,19 @@ model OtpCode {
   @@index([userId])
   @@index([expiresAt])
   @@map("otp_codes")
+}
+
+model claims {
+  id          Int       @id @default(autoincrement())
+  user_id     Int
+  package_id  Int?
+  title       String    @db.VarChar(100)
+  description String
+  status      String    @default("abierto")
+  response    String?
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+
+  user        user      @relation(fields: [user_id], references: [id])
+  package     packages? @relation(fields: [package_id], references: [id])
 }
