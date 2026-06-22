@@ -16,6 +16,7 @@
     "bcryptjs": "^3.0.3",
     "bun-plugin-tailwind": "^0.1.2",
     "jose": "^6.2.3",
+    "nodemailer": "^9.0.1",
     "pg": "^8.21.0",
     "react": "^19",
     "react-dom": "^19",

@@ -1,5 +1,6 @@
 import { prisma } from "../lib/prisma.ts";
 import bcrypt from "bcryptjs";
+import { sendOTPEmail } from "../lib/mail.js";
 
 export async function POST(request) {
   try {
@@ -67,6 +68,12 @@ export async function POST(request) {
     );
     console.log(
       `========================\n`
+    );
+
+    // Enviar OTP por correo
+    await sendOTPEmail(
+      user.email,
+      code
     );
 
     return Response.json({
