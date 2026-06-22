@@ -160,9 +160,9 @@ export default function ResidenteDashboard({ user, onLogout }: { user: User; onL
   return (
     <main style={{ minHeight: "100vh", background: "#f5f5f5", fontFamily: "sans-serif" }}>
       {/* Header */}
-      <div style={{ background: "linear-gradient(135deg, #1a2a6c, #1565C0)", padding: "1rem 2rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div style={{ background: "linear-gradient(135deg, #1a2a6c, #1565C0)", padding: "1rem 2rem", display: "flex", flexWrap: "wrap", gap: "0.75rem", justifyContent: "space-between", alignItems: "center" }}>
         <span style={{ fontSize: "22px", fontWeight: "500", color: "white" }}>in<span style={{ color: "#EF5350" }}>Charge.</span></span>
-        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "1rem" }}>
           <div style={{ position: "relative" }}>
             <button
               onClick={() => setShowNotifications(!showNotifications)}
@@ -184,7 +184,7 @@ export default function ResidenteDashboard({ user, onLogout }: { user: User; onL
 
             {showNotifications && (
               <div style={{
-                position: "absolute", top: "48px", right: 0, width: "320px",
+                position: "absolute", top: "48px", right: 0, width: "min(320px, 85vw)",
                 background: "white", borderRadius: "12px", boxShadow: "0 8px 30px rgba(0,0,0,0.2)",
                 zIndex: 9999, overflow: "hidden"
               }}>
@@ -237,6 +237,8 @@ export default function ResidenteDashboard({ user, onLogout }: { user: User; onL
         <div
           style={{
             display: "flex",
+            flexWrap: "wrap",
+            gap: "1rem",
             justifyContent: "space-between",
             alignItems: "center",
             marginBottom: "2rem",
@@ -296,7 +298,7 @@ export default function ResidenteDashboard({ user, onLogout }: { user: User; onL
           </div>
         </div>
         {/* Stats */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem", marginBottom: "2rem" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "1rem", marginBottom: "2rem" }}>
           {[
             {
               key: "pendiente",
@@ -519,7 +521,8 @@ export default function ResidenteDashboard({ user, onLogout }: { user: User; onL
     <div
       style={{
         background: "white",
-        width: "500px",
+        width: "90%",
+        maxWidth: "500px",
         borderRadius: "12px",
         padding: "24px"
       }}
@@ -705,7 +708,8 @@ export default function ResidenteDashboard({ user, onLogout }: { user: User; onL
     <div
       style={{
         background: "white",
-        width: "500px",
+        width: "90%",
+        maxWidth: "500px",
         borderRadius: "12px",
         padding: "24px",
       }}
@@ -832,7 +836,8 @@ export default function ResidenteDashboard({ user, onLogout }: { user: User; onL
     <div
       style={{
         background: "white",
-        width: "600px",
+        width: "90%",
+        maxWidth: "600px",
         borderRadius: "14px",
         padding: "24px",
         boxShadow: "0 8px 30px rgba(0,0,0,0.2)",

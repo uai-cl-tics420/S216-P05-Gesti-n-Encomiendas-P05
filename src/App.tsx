@@ -184,7 +184,7 @@ export function App() {
     <main style={{
       minHeight: "100vh",
       background: "linear-gradient(135deg, #1a2a6c 0%, #1565C0 60%, #1E88E5 100%)",
-      display: "flex", alignItems: "center", justifyContent: "center",
+      display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "center",
       padding: "2rem", gap: "4rem", fontFamily: "sans-serif",
     }}>
       <style>{`
