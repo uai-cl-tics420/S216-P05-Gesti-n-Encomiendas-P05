@@ -6,7 +6,6 @@ export type BaseTranslation = BaseTranslationType
 export type BaseLocale = 'es'
 
 export type Locales =
-	| 'de'
 	| 'en'
 	| 'es'
 
@@ -275,6 +274,22 @@ type RootTranslation = {
 	 * S​e​l​e​c​c​i​o​n​a​r​ ​r​e​s​i​d​e​n​t​e
 	 */
 	selectResident: string
+	/**
+	 * V​e​r​ ​d​e​t​a​l​l​e
+	 */
+	viewDetail: string
+	/**
+	 * R​e​g​i​s​t​r​a​r​ ​e​n​t​r​e​g​a
+	 */
+	registerPickup: string
+	/**
+	 * e​n​t​r​e​g​a​d​o
+	 */
+	delivered_status: string
+	/**
+	 * p​e​n​d​i​e​n​t​e
+	 */
+	pending_status: string
 }
 
 export type TranslationFunctions = {
@@ -538,6 +553,22 @@ export type TranslationFunctions = {
 	 * Seleccionar residente
 	 */
 	selectResident: () => LocalizedString
+	/**
+	 * Ver detalle
+	 */
+	viewDetail: () => LocalizedString
+	/**
+	 * Registrar entrega
+	 */
+	registerPickup: () => LocalizedString
+	/**
+	 * entregado
+	 */
+	delivered_status: () => LocalizedString
+	/**
+	 * pendiente
+	 */
+	pending_status: () => LocalizedString
 }
 
 export type Formatters = {}
