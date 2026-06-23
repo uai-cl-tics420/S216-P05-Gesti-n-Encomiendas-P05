@@ -61,7 +61,6 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
     });
     const data = await res.json();
     if (!res.ok) { showToast(data.error || "Error", false); return; }
-    showToast(`Paquete registrado. OTP: ${data.verification_code}`);
     setForm({ tracking_code: "", description: "", user_id: "", is_perishable: false });
     setShowForm(false);
     loadPackages();
