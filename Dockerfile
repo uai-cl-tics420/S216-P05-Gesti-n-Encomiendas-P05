@@ -11,4 +11,4 @@ RUN bunx prisma generate
 EXPOSE 3000
 ENV NODE_ENV=production
 
-CMD bunx prisma db push && bun run start
+CMD bunx prisma db push --schema=prisma/schema.prisma && bun run start
