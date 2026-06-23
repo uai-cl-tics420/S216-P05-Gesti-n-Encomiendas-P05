@@ -241,6 +241,14 @@ export function App() {
         <p style={{ fontSize: "15px", color: "rgba(255,255,255,0.8)", lineHeight: 1.6 }}>
           {LL.loginSubtitle()}
         </p>
+        <div style={{ display: "flex", gap: "1.5rem" }}>
+          {[["100%", "Digital"], ["24/7", lang === "es" ? "Disponible" : "Available"]].map(([num, label]) => (
+            <div key={label} style={{ display: "flex", flexDirection: "column" }}>
+              <span style={{ fontSize: "22px", fontWeight: "500", color: "white" }}>{num}</span>
+              <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.6)", textTransform: "uppercase", letterSpacing: "1px" }}>{label}</span>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Card */}
