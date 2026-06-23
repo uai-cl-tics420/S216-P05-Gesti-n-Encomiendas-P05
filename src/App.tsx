@@ -315,22 +315,7 @@ export function App() {
               </p>
             </header>
 
-            {!isLogin && (
-              <div style={{ marginBottom: "1.5rem" }}>
-                <label style={{ fontSize: "12px", color: "#777", marginBottom: "8px", display: "block" }}>{LL.userType()}</label>
-                <div style={{ display: "flex", gap: "8px" }}>
-                  {roles.map((role) => (
-                    <button key={role} onClick={() => setSelectedRole(role)} style={{
-                      flex: 1, padding: "8px 4px", borderRadius: "8px", fontSize: "11px",
-                      fontWeight: "500", border: "1.5px solid",
-                      borderColor: selectedRole === role ? "#1565C0" : "#e0e0e0",
-                      color: selectedRole === role ? "#1565C0" : "#999",
-                      background: selectedRole === role ? "#F0F7FF" : "white", cursor: "pointer",
-                    }}>{role}</button>
-                  ))}
-                </div>
-              </div>
-            )}
+            
 
             <div style={{ display: "flex", flexDirection: "column", gap: "1.1rem" }}>
               {!isLogin && (
