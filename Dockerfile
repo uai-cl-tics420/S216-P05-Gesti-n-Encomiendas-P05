@@ -11,4 +11,4 @@ RUN bunx prisma generate
 EXPOSE 3000
 ENV NODE_ENV=production
 
-CMD ["bun", "run", "start"]
+CMD DATABASE_URL=$DATABASE_URL bunx prisma db push && bun run start

@@ -10,22 +10,23 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-
 export async function sendOTPEmail(email, code) {
+  try {
+    await transporter.sendMail({
+      from: `"InCharge" <${process.env.SMTP_USER}>`,
+      to: email,
+      subject: "Tu código OTP",
+      html: `
+        <h2>Código de verificación</h2>
 
-  await transporter.sendMail({
-    from: `"InCharge" <${process.env.SMTP_USER}>`,
-    to: email,
-    subject: "Tu código OTP",
-    html: `
-      <h2>Código de verificación</h2>
+        <p>Tu código es:</p>
 
-      <p>Tu código es:</p>
+        <h1>${code}</h1>
 
-      <h1>${code}</h1>
-
-      <p>Este código expira en 5 minutos.</p>
-    `,
-  });
-
+        <p>Este código expira en 5 minutos.</p>
+      `,
+    });
+  } catch (error) {
+    console.log(`[MAIL] Error al enviar email. OTP para ${email}: ${code}`);
+  }
 }
