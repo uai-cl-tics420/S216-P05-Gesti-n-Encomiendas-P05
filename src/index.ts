@@ -2,14 +2,14 @@ import { serve } from "bun";
 import index from "./index.html";
 import { POST as login } from "./api/login.js";
 import { POST as register } from "./api/register.js";
-import { GET as getUsers, PATCH as patchUser } from "./api/users.js";
+import { GET as getUsers, PATCH as patchUser, DELETE as deleteUser } from "./api/users.js";
 import { Google, generateState, generateCodeVerifier, decodeIdToken } from "arctic";
 import { SignJWT } from "jose";
 import { prisma } from "./lib/prisma.ts";
 import { GET as getPackages, POST as createPackage, PATCH as deliverPackage } from "./api/packages.js";
 import { POST as verifyOtp } from "./api/verify-otp.js";
 import { GET as getNotifications, PATCH as readNotification } from "./api/notifications.js";
-import { GET as getComplaints, POST as createComplaint, PATCH as updateComplaint} from "./api/complaints";
+import { GET as getComplaints, POST as createComplaint, PATCH as updateComplaint } from "./api/complaints.js";
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "incharge-secret-2026");
 
@@ -24,11 +24,11 @@ const server = serve({
     "/*": index,
     "/api/login": { POST: login },
     "/api/register": { POST: register },
-    "/api/users": { GET: getUsers, PATCH: patchUser },
+    "/api/users": { GET: getUsers, PATCH: patchUser, DELETE: deleteUser },
     "/api/packages": { GET: getPackages, POST: createPackage, PATCH: deliverPackage },
     "/api/verify-otp": { POST: verifyOtp },
     "/api/notifications": { GET: getNotifications, PATCH: readNotification },
-    "/api/complaints": { GET: getComplaints, POST: createComplaint, PATCH: updateComplaint},
+    "/api/complaints": { GET: getComplaints, POST: createComplaint, PATCH: updateComplaint },
 
     "/api/auth/google": {
       async GET() {
@@ -64,7 +64,7 @@ const server = serve({
         let user = await prisma.user.findFirst({ where: { email } });
         if (!user) {
           user = await prisma.user.create({
-            data: { name: name, email, role: "residente" },
+            data: { name, email, role: "residente" },
           });
         }
 

@@ -1,17 +1,15 @@
-import { prisma } from "../lib/prisma.ts";
+//RECLAMOS
 
+import { prisma } from "../lib/prisma.ts";
 export async function GET(req) {
   try {
     const url = new URL(req.url);
-
     const userId = url.searchParams.get("user_id");
     const role = url.searchParams.get("role");
-
     const where =
       role === "conserje"
         ? {}
         : { user_id: parseInt(userId) };
-
     const complaints = await prisma.claims.findMany({
       where,
       include: {
@@ -22,18 +20,15 @@ export async function GET(req) {
         created_at: "desc",
       },
     });
-
     return Response.json(complaints);
   } catch (error) {
     console.error(error);
-
     return Response.json(
-      { error: "Error al obtener reclamos" },
+      { error: "Error al obtener el reclamo" },
       { status: 500 }
     );
   }
 }
-
 export async function POST(req) {
   try {
     const {
@@ -42,7 +37,6 @@ export async function POST(req) {
       title,
       description,
     } = await req.json();
-
     const complaint = await prisma.claims.create({
       data: {
         user_id: parseInt(user_id),
@@ -54,21 +48,18 @@ export async function POST(req) {
         status: "pendiente",
       },
     });
-
     return Response.json(
       complaint,
       { status: 201 }
     );
   } catch (error) {
     console.error(error);
-
     return Response.json(
       { error: "Error al crear reclamo" },
       { status: 500 }
     );
   }
 }
-
 export async function PATCH(req) {
   try {
     const {

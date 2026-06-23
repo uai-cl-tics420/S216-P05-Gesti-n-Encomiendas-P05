@@ -179,6 +179,102 @@ type RootTranslation = {
 	 * C​a​r​g​a​n​d​o​ ​u​s​u​a​r​i​o​s​.​.​.
 	 */
 	loadingUsers: string
+	/**
+	 * N​o​t​i​f​i​c​a​c​i​o​n​e​s
+	 */
+	notifications: string
+	/**
+	 * N​o​ ​t​i​e​n​e​s​ ​n​o​t​i​f​i​c​a​c​i​o​n​e​s
+	 */
+	noNotifications: string
+	/**
+	 * A​g​r​e​g​a​r​ ​u​s​u​a​r​i​o
+	 */
+	addUser: string
+	/**
+	 * E​l​i​m​i​n​a​r
+	 */
+	deleteUser: string
+	/**
+	 * N​o​ ​t​i​e​n​e​s​ ​p​a​q​u​e​t​e​s
+	 */
+	noPackages: string
+	/**
+	 * N​o​ ​h​a​y​ ​u​s​u​a​r​i​o​s
+	 */
+	noUsers: string
+	/**
+	 * C​ó​d​i​g​o​ ​d​e​ ​r​e​t​i​r​o
+	 */
+	retrievalCode: string
+	/**
+	 * M​i​s​ ​R​e​c​l​a​m​o​s
+	 */
+	myComplaints: string
+	/**
+	 * C​r​e​a​r​ ​R​e​c​l​a​m​o
+	 */
+	createComplaint: string
+	/**
+	 * G​e​s​t​i​o​n​a​r​ ​R​e​c​l​a​m​o​s
+	 */
+	manageComplaints: string
+	/**
+	 * N​o​ ​h​a​y​ ​r​e​c​l​a​m​o​s​ ​r​e​g​i​s​t​r​a​d​o​s
+	 */
+	noComplaints: string
+	/**
+	 * E​n​v​i​a​r​ ​R​e​c​l​a​m​o
+	 */
+	sendComplaint: string
+	/**
+	 * P​a​q​u​e​t​e​ ​r​e​l​a​c​i​o​n​a​d​o​ ​(​o​p​c​i​o​n​a​l​)
+	 */
+	relatedPackage: string
+	/**
+	 * T​í​t​u​l​o​ ​d​e​l​ ​r​e​c​l​a​m​o
+	 */
+	complaintTitle: string
+	/**
+	 * D​e​s​c​r​i​p​c​i​ó​n​ ​d​e​l​ ​r​e​c​l​a​m​o
+	 */
+	complaintDescription: string
+	/**
+	 * N​u​e​v​o​ ​R​e​c​l​a​m​o
+	 */
+	newComplaint: string
+	/**
+	 * S​i​n​ ​p​a​q​u​e​t​e​ ​a​s​o​c​i​a​d​o
+	 */
+	noAssociatedPackage: string
+	/**
+	 * C​o​n​f​i​r​m​a​r​ ​E​n​t​r​e​g​a
+	 */
+	confirmDelivery: string
+	/**
+	 * R​e​g​i​s​t​r​a​r​ ​E​n​t​r​e​g​a
+	 */
+	registerDelivery: string
+	/**
+	 * N​o​m​b​r​e​ ​d​e​l​ ​r​e​c​e​p​t​o​r
+	 */
+	receiverName: string
+	/**
+	 * R​U​T​ ​d​e​l​ ​r​e​c​e​p​t​o​r
+	 */
+	receiverRut: string
+	/**
+	 * C​ó​d​i​g​o​ ​O​T​P​ ​d​e​l​ ​r​e​s​i​d​e​n​t​e
+	 */
+	otpCode: string
+	/**
+	 * ¿​P​e​r​e​c​e​d​e​r​o​?
+	 */
+	perishable: string
+	/**
+	 * S​e​l​e​c​c​i​o​n​a​r​ ​r​e​s​i​d​e​n​t​e
+	 */
+	selectResident: string
 }
 
 export type TranslationFunctions = {
@@ -346,6 +442,102 @@ export type TranslationFunctions = {
 	 * Cargando usuarios...
 	 */
 	loadingUsers: () => LocalizedString
+	/**
+	 * Notificaciones
+	 */
+	notifications: () => LocalizedString
+	/**
+	 * No tienes notificaciones
+	 */
+	noNotifications: () => LocalizedString
+	/**
+	 * Agregar usuario
+	 */
+	addUser: () => LocalizedString
+	/**
+	 * Eliminar
+	 */
+	deleteUser: () => LocalizedString
+	/**
+	 * No tienes paquetes
+	 */
+	noPackages: () => LocalizedString
+	/**
+	 * No hay usuarios
+	 */
+	noUsers: () => LocalizedString
+	/**
+	 * Código de retiro
+	 */
+	retrievalCode: () => LocalizedString
+	/**
+	 * Mis Reclamos
+	 */
+	myComplaints: () => LocalizedString
+	/**
+	 * Crear Reclamo
+	 */
+	createComplaint: () => LocalizedString
+	/**
+	 * Gestionar Reclamos
+	 */
+	manageComplaints: () => LocalizedString
+	/**
+	 * No hay reclamos registrados
+	 */
+	noComplaints: () => LocalizedString
+	/**
+	 * Enviar Reclamo
+	 */
+	sendComplaint: () => LocalizedString
+	/**
+	 * Paquete relacionado (opcional)
+	 */
+	relatedPackage: () => LocalizedString
+	/**
+	 * Título del reclamo
+	 */
+	complaintTitle: () => LocalizedString
+	/**
+	 * Descripción del reclamo
+	 */
+	complaintDescription: () => LocalizedString
+	/**
+	 * Nuevo Reclamo
+	 */
+	newComplaint: () => LocalizedString
+	/**
+	 * Sin paquete asociado
+	 */
+	noAssociatedPackage: () => LocalizedString
+	/**
+	 * Confirmar Entrega
+	 */
+	confirmDelivery: () => LocalizedString
+	/**
+	 * Registrar Entrega
+	 */
+	registerDelivery: () => LocalizedString
+	/**
+	 * Nombre del receptor
+	 */
+	receiverName: () => LocalizedString
+	/**
+	 * RUT del receptor
+	 */
+	receiverRut: () => LocalizedString
+	/**
+	 * Código OTP del residente
+	 */
+	otpCode: () => LocalizedString
+	/**
+	 * ¿Perecedero?
+	 */
+	perishable: () => LocalizedString
+	/**
+	 * Seleccionar residente
+	 */
+	selectResident: () => LocalizedString
 }
 
 export type Formatters = {}
