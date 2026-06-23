@@ -63,7 +63,7 @@ const es = {
   registerDelivery: 'Registrar Entrega',
   receiverName: 'Nombre del receptor',
   receiverRut: 'RUT del receptor',
-  otpCode: 'Código OTP del residente',
+  otpCode: 'Código del residente',
   perishable: '¿Perecedero?',
   selectResident: 'Seleccionar residente',
   viewDetail: 'Ver detalle',
