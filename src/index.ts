@@ -10,7 +10,7 @@ import { GET as getPackages, POST as createPackage, PATCH as deliverPackage } fr
 import { POST as verifyOtp } from "./api/verify-otp.js";
 import { GET as getNotifications, PATCH as readNotification } from "./api/notifications.js";
 import { GET as getComplaints, POST as createComplaint, PATCH as updateComplaint } from "./api/complaints.js";
-
+import { GET as getVisits, POST as createVisit, PATCH as useVisit } from "./api/visits.js";
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "incharge-secret-2026");
 
 const google = new Google(
@@ -29,7 +29,7 @@ const server = serve({
     "/api/verify-otp": { POST: verifyOtp },
     "/api/notifications": { GET: getNotifications, PATCH: readNotification },
     "/api/complaints": { GET: getComplaints, POST: createComplaint, PATCH: updateComplaint },
-
+    "/api/visits": { GET: getVisits, POST: createVisit, PATCH: useVisit },
     "/api/auth/google": {
       async GET() {
         const state = generateState();

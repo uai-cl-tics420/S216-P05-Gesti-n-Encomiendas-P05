@@ -290,6 +290,78 @@ type RootTranslation = {
 	 * p​e​n​d​i​e​n​t​e
 	 */
 	pending_status: string
+	/**
+	 * M​i​s​ ​V​i​s​i​t​a​s
+	 */
+	myVisits: string
+	/**
+	 * R​e​g​i​s​t​r​a​r​ ​V​i​s​i​t​a
+	 */
+	registerVisit: string
+	/**
+	 * V​e​r​i​f​i​c​a​r​ ​V​i​s​i​t​a
+	 */
+	verifyVisit: string
+	/**
+	 * N​o​m​b​r​e​ ​d​e​l​ ​v​i​s​i​t​a​n​t​e
+	 */
+	visitorName: string
+	/**
+	 * R​U​T​ ​d​e​l​ ​v​i​s​i​t​a​n​t​e
+	 */
+	visitorRut: string
+	/**
+	 * D​e​p​a​r​t​a​m​e​n​t​o
+	 */
+	department: string
+	/**
+	 * V​i​e​n​e​ ​c​o​n​ ​a​u​t​o
+	 */
+	hasCar: string
+	/**
+	 * P​a​t​e​n​t​e
+	 */
+	carPlate: string
+	/**
+	 * G​e​n​e​r​a​r​ ​C​ó​d​i​g​o​ ​d​e​ ​A​c​c​e​s​o
+	 */
+	generateCode: string
+	/**
+	 * C​ó​d​i​g​o​ ​Q​R​ ​d​e​ ​a​c​c​e​s​o
+	 */
+	qrCode: string
+	/**
+	 * A​c​t​i​v​a
+	 */
+	visitActive: string
+	/**
+	 * U​s​a​d​a
+	 */
+	visitUsed: string
+	/**
+	 * C​o​n​f​i​r​m​a​r​ ​I​n​g​r​e​s​o
+	 */
+	confirmEntry: string
+	/**
+	 * V​i​s​i​t​a​ ​v​á​l​i​d​a​ ​—​ ​p​u​e​d​e​ ​i​n​g​r​e​s​a​r
+	 */
+	visitValid: string
+	/**
+	 * E​s​t​e​ ​c​ó​d​i​g​o​ ​y​a​ ​f​u​e​ ​u​t​i​l​i​z​a​d​o
+	 */
+	visitAlreadyUsed: string
+	/**
+	 * C​ó​d​i​g​o​ ​d​e​ ​v​i​s​i​t​a
+	 */
+	visitCode: string
+	/**
+	 * V​i​s​i​t​a​s​ ​r​e​c​i​e​n​t​e​s
+	 */
+	recentVisits: string
+	/**
+	 * N​o​ ​t​i​e​n​e​s​ ​v​i​s​i​t​a​s​ ​r​e​g​i​s​t​r​a​d​a​s
+	 */
+	noVisits: string
 }
 
 export type TranslationFunctions = {
@@ -569,6 +641,78 @@ export type TranslationFunctions = {
 	 * pendiente
 	 */
 	pending_status: () => LocalizedString
+	/**
+	 * Mis Visitas
+	 */
+	myVisits: () => LocalizedString
+	/**
+	 * Registrar Visita
+	 */
+	registerVisit: () => LocalizedString
+	/**
+	 * Verificar Visita
+	 */
+	verifyVisit: () => LocalizedString
+	/**
+	 * Nombre del visitante
+	 */
+	visitorName: () => LocalizedString
+	/**
+	 * RUT del visitante
+	 */
+	visitorRut: () => LocalizedString
+	/**
+	 * Departamento
+	 */
+	department: () => LocalizedString
+	/**
+	 * Viene con auto
+	 */
+	hasCar: () => LocalizedString
+	/**
+	 * Patente
+	 */
+	carPlate: () => LocalizedString
+	/**
+	 * Generar Código de Acceso
+	 */
+	generateCode: () => LocalizedString
+	/**
+	 * Código QR de acceso
+	 */
+	qrCode: () => LocalizedString
+	/**
+	 * Activa
+	 */
+	visitActive: () => LocalizedString
+	/**
+	 * Usada
+	 */
+	visitUsed: () => LocalizedString
+	/**
+	 * Confirmar Ingreso
+	 */
+	confirmEntry: () => LocalizedString
+	/**
+	 * Visita válida — puede ingresar
+	 */
+	visitValid: () => LocalizedString
+	/**
+	 * Este código ya fue utilizado
+	 */
+	visitAlreadyUsed: () => LocalizedString
+	/**
+	 * Código de visita
+	 */
+	visitCode: () => LocalizedString
+	/**
+	 * Visitas recientes
+	 */
+	recentVisits: () => LocalizedString
+	/**
+	 * No tienes visitas registradas
+	 */
+	noVisits: () => LocalizedString
 }
 
 export type Formatters = {}
