@@ -13,6 +13,12 @@ interface Complaint {
   user?: { name: string };
   package?: { id: number; tracking_code: string; description: string; };
 }
+interface Visit {
+  id: number; visitor_name: string; visitor_rut: string;
+  department: string; has_car: boolean; car_plate?: string;
+  qr_code: string; used: boolean; created_at: string; expires_at: string;
+  user?: { name: string };
+}
 
 interface Department {
   id: number;
@@ -28,6 +34,8 @@ const statusInfo = {
   rechazado: { label: "Rechazado", bg: "#FAFAFA", color: "#616161" },
 };
 
+type ActiveView = "paquetes" | "nuevo_paquete" | "visitas" | "reclamos";
+
 export default function ConserjedDashboard({ user, onLogout }: { user: User; onLogout: () => void }) {
   const { LL, locale, setLocale } = useI18nContext();
   const lang = locale;
@@ -37,13 +45,16 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
   const [packages, setPackages] = useState<Package[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [complaints, setComplaints] = useState<Complaint[]>([]);
+  const [visits, setVisits] = useState<Visit[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"todos" | "pendiente" | "entregado">("todos");
-  const [showForm, setShowForm] = useState(false);
-  const [showComplaints, setShowComplaints] = useState(false);
+  const [activeView, setActiveView] = useState<ActiveView>("paquetes");
   const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
   const [viewPackage, setViewPackage] = useState<Package | null>(null);
   const [selectedComplaint, setSelectedComplaint] = useState<Complaint | null>(null);
+  const [scannedVisit, setScannedVisit] = useState<Visit | null>(null);
+  const [visitCode, setVisitCode] = useState("");
+  const [visitError, setVisitError] = useState("");
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
   const [form, setForm] = useState({ tracking_code: "", description: "", user_id: "", department_id: "", is_perishable: false });
   const [deliveryForm, setDeliveryForm] = useState({ receiver_name: "", receiver_rut: "", verification_code: "" });
@@ -56,9 +67,20 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
       loadDepartments();}, []);
 
   const showToast = (msg: string, ok = true) => { setToast({ msg, ok }); setTimeout(() => setToast(null), 3000); };
+  const inputStyle = { width: "100%", padding: "10px 14px", border: "1.5px solid #e8e8e8", borderRadius: "8px", fontSize: "14px", outline: "none", boxSizing: "border-box" as const };
 
   const loadPackages = () => fetch("/api/packages", { headers: { Authorization: `Bearer ${token}` } })
-    .then(r => r.json()).then(d => { setPackages(d); setLoading(false); });
+    .then(r => r.json()).then(d => { setPackages(Array.isArray(d) ? d : []); setLoading(false); });
+
+  const loadVisits = async () => {
+    const res = await fetch("/api/visits", { headers: { Authorization: `Bearer ${token}` } });
+    if (res.ok) setVisits(await res.json());
+  };
+
+  const loadComplaints = async () => {
+    const res = await fetch("/api/complaints?role=conserje", { headers: { Authorization: `Bearer ${token}` } });
+    if (res.ok) setComplaints(await res.json());
+  };
 
   useEffect(() => {
     loadPackages();
@@ -87,6 +109,7 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
     setForm({ tracking_code: "", description: "", user_id: "", department_id: "",is_perishable: false });
     setShowForm(false);
     loadPackages();
+    setActiveView("paquetes");
   };
 
   const handleDeliver = async () => {
@@ -107,11 +130,6 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
     setDeliveryForm({ receiver_name: "", receiver_rut: "", verification_code: "" });
   };
 
-  const loadComplaints = async () => {
-    const res = await fetch("/api/complaints?role=conserje", { headers: { Authorization: `Bearer ${token}` } });
-    if (res.ok) setComplaints(await res.json());
-  };
-
   const updateComplaintStatus = async (id: number, status: string) => {
     const res = await fetch("/api/complaints", {
       method: "PATCH",
@@ -123,8 +141,38 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
     showToast("Estado actualizado");
   };
 
+  const handleScanVisit = async () => {
+    if (!visitCode.trim()) { setVisitError("Ingresa un código"); return; }
+    setVisitError("");
+    const res = await fetch(`/api/visits?qr=${visitCode}`, { headers: { Authorization: `Bearer ${token}` } });
+    const data = await res.json();
+    if (!res.ok) { setVisitError(data.error || "Código inválido"); return; }
+    setScannedVisit(data);
+  };
+
+  const handleConfirmVisit = async () => {
+    if (!scannedVisit) return;
+    const res = await fetch("/api/visits", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ qr_code: scannedVisit.qr_code }),
+    });
+    const data = await res.json();
+    if (!res.ok) { showToast(data.error || "Error", false); return; }
+    showToast("Visita registrada correctamente");
+    setScannedVisit(null);
+    setVisitCode("");
+    loadVisits();
+  };
+
   const filteredPackages = packages.filter(p => filter === "todos" || p.status === filter);
-  const inputStyle = { width: "100%", padding: "10px 14px", border: "1.5px solid #e8e8e8", borderRadius: "8px", fontSize: "14px", outline: "none", boxSizing: "border-box" as const };
+
+  const navItems = [
+    { key: "paquetes", label: LL.packageList(), color: "#1565C0" },
+    { key: "nuevo_paquete", label: LL.newPackage(), color: "#022042" },
+    { key: "visitas", label: LL.verifyVisit(), color: "#1D9E75", onClick: () => { loadVisits(); setActiveView("visitas"); } },
+    { key: "reclamos", label: LL.manageComplaints(), color: "#EF5350", onClick: () => { loadComplaints(); setActiveView("reclamos"); } },
+  ];
 
   return (
     <main style={{ minHeight: "100vh", background: "#f5f5f5", fontFamily: "sans-serif" }}>
@@ -146,29 +194,15 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
         </div>
       </div>
 
-      <div style={{ padding: "2rem", maxWidth: "900px", margin: "0 auto" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
-          <div>
-            <h1 style={{ fontSize: "22px", fontWeight: "500", color: "#1a1a1a", margin: 0 }}>{LL.conciergePanel()}</h1>
-            <p style={{ fontSize: "14px", color: "#999", margin: "4px 0 0" }}>{LL.conciergeSubtitle()}</p>
-          </div>
-          <div style={{ display: "flex", gap: "10px" }}>
-            <button onClick={() => setShowForm(!showForm)} style={{ padding: "10px 20px", background: "#1565C0", color: "white", border: "none", borderRadius: "10px", cursor: "pointer", fontSize: "14px", fontWeight: "500" }}>{LL.newPackage()}</button>
-            <button onClick={() => { setShowComplaints(true); loadComplaints(); }} style={{ padding: "10px 20px", background: "#EF5350", color: "white", border: "none", borderRadius: "10px", cursor: "pointer", fontSize: "14px" }}>{LL.manageComplaints()}</button>
-          </div>
-        </div>
-
-        {/* Stats */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem", marginBottom: "2rem" }}>
-          {[
-            { key: "pendiente", label: LL.pending(), value: packages.filter(p => p.status === "pendiente").length, color: "#EF5350" },
-            { key: "entregado", label: LL.delivered(), value: packages.filter(p => p.status === "entregado").length, color: "#1D9E75" },
-            { key: "todos", label: LL.total(), value: packages.length, color: "#022042" },
-          ].map(({ key, label, value, color }) => (
-            <div key={key} onClick={() => setFilter(key as any)} style={{ background: "white", borderRadius: "12px", padding: "1.5rem", textAlign: "center", border: filter === key ? `2px solid ${color}` : "0.5px solid #e0e0e0", cursor: "pointer" }}>
-              <p style={{ fontSize: "32px", fontWeight: "500", color, margin: 0 }}>{value}</p>
-              <p style={{ fontSize: "13px", color: "#999", margin: "4px 0 0" }}>{label}</p>
-            </div>
+      <div style={{ display: "flex", minHeight: "calc(100vh - 64px)" }}>
+        {/* Sidebar */}
+        <div style={{ width: "220px", background: "white", borderRight: "0.5px solid #e0e0e0", padding: "1.5rem 1rem", flexShrink: 0 }}>
+          <p style={{ fontSize: "11px", color: "#999", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "1rem", fontWeight: 600 }}>Menú</p>
+          {navItems.map(item => (
+            <button key={item.key} onClick={() => item.onClick ? item.onClick() : setActiveView(item.key as ActiveView)}
+              style={{ width: "100%", textAlign: "left", padding: "10px 14px", borderRadius: "10px", border: "none", cursor: "pointer", fontSize: "14px", fontWeight: activeView === item.key ? 600 : 400, background: activeView === item.key ? `${item.color}15` : "transparent", color: activeView === item.key ? item.color : "#555", marginBottom: "4px", transition: "all 0.15s" }}>
+              {item.label}
+            </button>
           ))}
         </div>
 
@@ -226,40 +260,168 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
           </div>
         )}
 
-        {/* Lista paquetes */}
-        <div style={{ background: "white", borderRadius: "12px", border: "0.5px solid #e0e0e0", overflow: "hidden" }}>
-          <div style={{ padding: "1rem 1.5rem", borderBottom: "0.5px solid #e0e0e0" }}>
-            <p style={{ fontWeight: "500", margin: 0, color: "#1a1a1a" }}>{LL.packageList()}</p>
-          </div>
-          {loading ? (
-            <p style={{ padding: "2rem", textAlign: "center", color: "#999" }}>{LL.loadingUsers()}</p>
-          ) : filteredPackages.length === 0 ? (
-            <p style={{ padding: "2rem", textAlign: "center", color: "#999" }}>{LL.noPackages()}</p>
-          ) : filteredPackages.map(pkg => (
-            <div key={pkg.id} onClick={() => pkg.status === "pendiente" ? setSelectedPackage(pkg) : setViewPackage(pkg)}
-              style={{ margin: "12px", padding: "18px", borderRadius: "14px", border: pkg.status === "pendiente" ? "1px solid #ffe0e0" : "1px solid #d7f5e5", background: pkg.status === "pendiente" ? "#fffdfd" : "#f8fffb", cursor: "pointer", transition: "all 0.25s ease", boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}
-              onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 20px rgba(0,0,0,0.12)"; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.05)"; }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div style={{ display: "flex", gap: "14px" }}>
-                  <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: pkg.status === "pendiente" ? "#FFF1F1" : "#EAF9F0", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px" }}>
-                    {pkg.status === "pendiente" ? "📦" : "✅"}
+          {/* Paquetes */}
+          {activeView === "paquetes" && (
+            <>
+              <div style={{ marginBottom: "2rem" }}>
+                <h1 style={{ fontSize: "22px", fontWeight: "500", color: "#1a1a1a", margin: 0 }}>{LL.conciergePanel()}</h1>
+                <p style={{ fontSize: "14px", color: "#999", margin: "4px 0 0" }}>{LL.conciergeSubtitle()}</p>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem", marginBottom: "2rem" }}>
+                {[
+                  { key: "pendiente", label: LL.pending(), value: packages.filter(p => p.status === "pendiente").length, color: "#EF5350" },
+                  { key: "entregado", label: LL.delivered(), value: packages.filter(p => p.status === "entregado").length, color: "#1D9E75" },
+                  { key: "todos", label: LL.total(), value: packages.length, color: "#022042" },
+                ].map(({ key, label, value, color }) => (
+                  <div key={key} onClick={() => setFilter(key as any)} style={{ background: "white", borderRadius: "12px", padding: "1.5rem", textAlign: "center", border: filter === key ? `2px solid ${color}` : "0.5px solid #e0e0e0", cursor: "pointer" }}>
+                    <p style={{ fontSize: "32px", fontWeight: "500", color, margin: 0 }}>{value}</p>
+                    <p style={{ fontSize: "13px", color: "#999", margin: "4px 0 0" }}>{label}</p>
+                  </div>
+                ))}
+              </div>
+              <div style={{ background: "white", borderRadius: "12px", border: "0.5px solid #e0e0e0", overflow: "hidden" }}>
+                <div style={{ padding: "1rem 1.5rem", borderBottom: "0.5px solid #e0e0e0" }}>
+                  <p style={{ fontWeight: "500", margin: 0, color: "#1a1a1a" }}>{LL.packageList()}</p>
+                </div>
+                {loading ? (
+                  <p style={{ padding: "2rem", textAlign: "center", color: "#999" }}>{LL.loadingUsers()}</p>
+                ) : filteredPackages.length === 0 ? (
+                  <p style={{ padding: "2rem", textAlign: "center", color: "#999" }}>{LL.noPackages()}</p>
+                ) : filteredPackages.map(pkg => (
+                  <div key={pkg.id} onClick={() => pkg.status === "pendiente" ? setSelectedPackage(pkg) : setViewPackage(pkg)}
+                    style={{ margin: "12px", padding: "18px", borderRadius: "14px", border: pkg.status === "pendiente" ? "1px solid #ffe0e0" : "1px solid #d7f5e5", background: pkg.status === "pendiente" ? "#fffdfd" : "#f8fffb", cursor: "pointer", transition: "all 0.25s ease", boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}
+                    onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 20px rgba(0,0,0,0.12)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.05)"; }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div style={{ display: "flex", gap: "14px" }}>
+                        <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: pkg.status === "pendiente" ? "#FFF1F1" : "#EAF9F0", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px" }}>
+                          {pkg.status === "pendiente" ? "📦" : "✅"}
+                        </div>
+                        <div>
+                          <p style={{ fontWeight: 600, margin: 0, fontSize: "15px", color: "#1a1a1a" }}>{pkg.tracking_code}</p>
+                          <p style={{ margin: "4px 0", color: "#666", fontSize: "13px" }}>{pkg.description || "Sin descripción"}</p>
+                          <p style={{ color: "#999", margin: 0, fontSize: "12px" }}>{pkg.user?.name}</p>
+                          <p style={{ color: "#1565C0", marginTop: "8px", marginBottom: 0, fontSize: "12px", fontWeight: 500 }}>
+                            {pkg.status === "pendiente" ? LL.registerDelivery() : LL.viewDetail()}
+                          </p>
+                        </div>
+                      </div>
+                      <span style={{ background: pkg.status === "pendiente" ? "#FFF3E0" : "#E8F5E9", color: pkg.status === "pendiente" ? "#E65100" : "#2E7D32", padding: "8px 14px", borderRadius: "999px", fontSize: "12px", fontWeight: 600 }}>
+                        {pkg.status === "pendiente" ? LL.pending() : LL.delivered()}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* Nuevo Paquete */}
+          {activeView === "nuevo_paquete" && (
+            <>
+              <div style={{ marginBottom: "2rem" }}>
+                <h1 style={{ fontSize: "22px", fontWeight: "500", color: "#1a1a1a", margin: 0 }}>{LL.registerPackage()}</h1>
+                <p style={{ fontSize: "14px", color: "#999", margin: "4px 0 0" }}>{LL.conciergeSubtitle()}</p>
+              </div>
+              <div style={{ background: "white", borderRadius: "14px", padding: "24px", border: "0.5px solid #e0e0e0", maxWidth: "600px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                  <div>
+                    <label style={{ fontSize: "12px", color: "#777", marginBottom: "5px", display: "block" }}>{LL.trackingCode()} *</label>
+                    <input type="text" placeholder="PKG-004" value={form.tracking_code} onChange={e => setForm({ ...form, tracking_code: e.target.value })} style={inputStyle} />
                   </div>
                   <div>
-                    <p style={{ fontWeight: 600, margin: 0, fontSize: "15px", color: "#1a1a1a" }}>{pkg.tracking_code}</p>
-                    <p style={{ margin: "4px 0", color: "#666", fontSize: "13px" }}>{pkg.description || "Sin descripción"}</p>
-                    <p style={{ color: "#999", margin: 0, fontSize: "12px" }}>{pkg.user?.name}</p>
-                    <p style={{ color: "#1565C0", marginTop: "8px", marginBottom: 0, fontSize: "12px", fontWeight: 500 }}>
-                      {pkg.status === "pendiente" ? LL.registerDelivery() : LL.viewDetail()}
-                    </p>
+                    <label style={{ fontSize: "12px", color: "#777", marginBottom: "5px", display: "block" }}>{LL.residentName()} *</label>
+                    <select value={form.user_id} onChange={e => setForm({ ...form, user_id: e.target.value })} style={inputStyle}>
+                      <option value="">{LL.selectResident()}</option>
+                      {users.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: "12px", color: "#777", marginBottom: "5px", display: "block" }}>{LL.description()}</label>
+                    <input type="text" placeholder="Ej. Caja mediana" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} style={inputStyle} />
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", paddingTop: "20px" }}>
+                    <input type="checkbox" id="perishable" checked={form.is_perishable} onChange={e => setForm({ ...form, is_perishable: e.target.checked })} />
+                    <label htmlFor="perishable" style={{ fontSize: "14px", color: "#777" }}>{LL.perishable()}</label>
                   </div>
                 </div>
-                <span style={{ background: pkg.status === "pendiente" ? "#FFF3E0" : "#E8F5E9", color: pkg.status === "pendiente" ? "#E65100" : "#2E7D32", padding: "8px 14px", borderRadius: "999px", fontSize: "12px", fontWeight: 600 }}>
-                  {pkg.status === "pendiente" ? LL.pending() : LL.delivered()}
-                </span>
+                <div style={{ display: "flex", gap: "1rem", marginTop: "1.5rem" }}>
+                  <button onClick={handleAdd} style={{ padding: "10px 24px", background: "#1565C0", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: 600 }}>{LL.save()}</button>
+                  <button onClick={() => setActiveView("paquetes")} style={{ padding: "10px 24px", background: "white", color: "#999", border: "1.5px solid #e0e0e0", borderRadius: "8px", cursor: "pointer" }}>{LL.cancel()}</button>
+                </div>
               </div>
-            </div>
-          ))}
+            </>
+          )}
+
+          {/* Verificar Visita */}
+          {activeView === "visitas" && (
+            <>
+              <div style={{ marginBottom: "2rem" }}>
+                <h1 style={{ fontSize: "22px", fontWeight: "500", color: "#1a1a1a", margin: 0 }}>{LL.verifyVisit()}</h1>
+                <p style={{ fontSize: "14px", color: "#999", margin: "4px 0 0" }}>{LL.visitCode()}</p>
+              </div>
+              <div style={{ background: "white", borderRadius: "14px", padding: "24px", border: "0.5px solid #e0e0e0", maxWidth: "500px", marginBottom: "2rem" }}>
+                <div style={{ marginBottom: "12px" }}>
+                  <label style={{ fontSize: "12px", color: "#777", marginBottom: "5px", display: "block" }}>{LL.visitCode()}</label>
+                  <input type="text" placeholder="Pega el código aquí" value={visitCode} onChange={e => setVisitCode(e.target.value)} style={{ ...inputStyle, fontFamily: "monospace", fontSize: "13px" }} />
+                </div>
+                {visitError && <p style={{ color: "#EF5350", fontSize: "13px", marginBottom: "12px" }}>{visitError}</p>}
+                <button onClick={handleScanVisit} style={{ width: "100%", padding: "12px", background: "#1D9E75", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: 600 }}>
+                  {LL.verifyVisit()}
+                </button>
+              </div>
+              {visits.length > 0 && (
+                <div>
+                  <p style={{ fontWeight: 600, fontSize: "14px", color: "#374151", marginBottom: "12px" }}>{LL.recentVisits()}</p>
+                  {visits.map(v => (
+                    <div key={v.id} style={{ padding: "16px", borderRadius: "12px", border: "1px solid #e5e7eb", marginBottom: "10px", background: v.used ? "#f8fffb" : "white", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <div>
+                          <p style={{ fontWeight: 600, margin: 0, fontSize: "14px" }}>{v.visitor_name}</p>
+                          <p style={{ color: "#666", fontSize: "12px", margin: "4px 0" }}>{v.visitor_rut} — {LL.department()} {v.department}</p>
+                          {v.has_car && <p style={{ color: "#666", fontSize: "12px", margin: 0 }}>{LL.carPlate()}: {v.car_plate}</p>}
+                          <p style={{ color: "#999", fontSize: "11px", marginTop: "4px" }}>{new Date(v.created_at).toLocaleString()}</p>
+                        </div>
+                        <span style={{ padding: "4px 10px", borderRadius: "999px", fontSize: "11px", fontWeight: 600, background: v.used ? "#E8F5E9" : "#E3F2FD", color: v.used ? "#2E7D32" : "#1565C0", alignSelf: "flex-start" }}>
+                          {v.used ? LL.visitUsed() : LL.visitActive()}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Reclamos */}
+          {activeView === "reclamos" && (
+            <>
+              <div style={{ marginBottom: "2rem" }}>
+                <h1 style={{ fontSize: "22px", fontWeight: "500", color: "#1a1a1a", margin: 0 }}>{LL.manageComplaints()}</h1>
+                <p style={{ fontSize: "14px", color: "#999", margin: "4px 0 0" }}>{LL.conciergeSubtitle()}</p>
+              </div>
+              {complaints.length === 0 ? (
+                <div style={{ background: "white", borderRadius: "12px", padding: "3rem", textAlign: "center", border: "0.5px solid #e0e0e0" }}>
+                  <p style={{ color: "#999" }}>{LL.noComplaints()}</p>
+                </div>
+              ) : complaints.map(c => {
+                const state = statusInfo[c.status as keyof typeof statusInfo] ?? statusInfo.pendiente;
+                return (
+                  <div key={c.id} onClick={() => setSelectedComplaint(c)} style={{ cursor: "pointer", marginBottom: "16px", padding: "18px", borderRadius: "14px", border: "1px solid #e5e7eb", background: "white", boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                      <div>
+                        <h3 style={{ margin: 0, fontSize: "16px" }}>{c.title}</h3>
+                        <p style={{ color: "#999", fontSize: "12px", marginTop: "4px" }}>{new Date(c.created_at).toLocaleString()}</p>
+                        <p style={{ fontSize: "13px", color: "#777" }}>{LL.residentName()}: {c.user?.name}</p>
+                        {c.package && <p style={{ fontSize: "13px", color: "#1565C0" }}>{c.package.tracking_code}</p>}
+                      </div>
+                      <span style={{ padding: "6px 12px", borderRadius: "999px", fontSize: "12px", fontWeight: 600, background: state.bg, color: state.color }}>{state.label}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </>
+          )}
         </div>
       </div>
 
@@ -316,30 +478,37 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
         </div>
       )}
 
-      {/* Modal gestionar reclamos */}
-      {showComplaints && !selectedComplaint && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 9999 }}>
-          <div style={{ background: "white", width: "600px", maxHeight: "80vh", overflowY: "auto", borderRadius: "14px", padding: "24px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-              <h2 style={{ margin: 0 }}>{LL.manageComplaints()}</h2>
-              <button onClick={() => setShowComplaints(false)} style={{ background: "#EF5350", color: "white", border: "none", padding: "10px 16px", borderRadius: "8px", cursor: "pointer" }}>{LL.cancel()}</button>
+      {/* Modal detalle visita escaneada */}
+      {scannedVisit && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 10000 }}>
+          <div style={{ background: "white", width: "90%", maxWidth: "450px", borderRadius: "14px", padding: "24px" }}>
+            <h2 style={{ margin: "0 0 20px" }}>{LL.verifyVisit()}</h2>
+            <div style={{ background: "#f8fafc", borderRadius: "12px", padding: "18px", marginBottom: "16px" }}>
+              <p style={{ margin: "0 0 10px" }}><strong>{LL.visitorName()}:</strong> {scannedVisit.visitor_name}</p>
+              <p style={{ margin: "0 0 10px" }}><strong>{LL.visitorRut()}:</strong> {scannedVisit.visitor_rut}</p>
+              <p style={{ margin: "0 0 10px" }}><strong>{LL.department()}:</strong> {scannedVisit.department}</p>
+              <p style={{ margin: "0 0 10px" }}><strong>{LL.hasCar()}:</strong> {scannedVisit.has_car ? `Sí — ${scannedVisit.car_plate}` : "No"}</p>
+              <p style={{ margin: 0 }}><strong>Expira:</strong> {new Date(scannedVisit.expires_at).toLocaleString()}</p>
             </div>
-            {complaints.length === 0 ? <p style={{ color: "#999" }}>{LL.noComplaints()}</p> : complaints.map(c => {
-              const state = statusInfo[c.status as keyof typeof statusInfo] ?? statusInfo.pendiente;
-              return (
-                <div key={c.id} onClick={() => setSelectedComplaint(c)} style={{ cursor: "pointer", marginBottom: "16px", padding: "18px", borderRadius: "14px", border: "1px solid #e5e7eb", boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                    <div>
-                      <h3 style={{ margin: 0, fontSize: "16px" }}>{c.title}</h3>
-                      <p style={{ color: "#999", fontSize: "12px", marginTop: "4px" }}>{new Date(c.created_at).toLocaleString()}</p>
-                      <p style={{ fontSize: "13px", color: "#777" }}>{LL.residentName()}: {c.user?.name}</p>
-                      {c.package && <p style={{ fontSize: "13px", color: "#1565C0" }}>{c.package.tracking_code}</p>}
-                    </div>
-                    <span style={{ padding: "6px 12px", borderRadius: "999px", fontSize: "12px", fontWeight: 600, background: state.bg, color: state.color }}>{state.label}</span>
-                  </div>
-                </div>
-              );
-            })}
+            {scannedVisit.used ? (
+              <div style={{ background: "#FFF3E0", border: "1px solid #FFB74D", borderRadius: "10px", padding: "14px", marginBottom: "16px" }}>
+                <p style={{ margin: 0, color: "#E65100", fontWeight: 600, fontSize: "14px" }}>{LL.visitAlreadyUsed()}</p>
+              </div>
+            ) : (
+              <div style={{ background: "#E8F5E9", border: "1px solid #A5D6A7", borderRadius: "10px", padding: "14px", marginBottom: "16px" }}>
+                <p style={{ margin: 0, color: "#2E7D32", fontWeight: 600, fontSize: "14px" }}>{LL.visitValid()}</p>
+              </div>
+            )}
+            <div style={{ display: "flex", gap: "10px" }}>
+              {!scannedVisit.used && (
+                <button onClick={handleConfirmVisit} style={{ flex: 1, padding: "12px", background: "#1D9E75", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: 600 }}>
+                  {LL.confirmEntry()}
+                </button>
+              )}
+              <button onClick={() => { setScannedVisit(null); setVisitCode(""); }} style={{ flex: 1, padding: "12px", background: "white", color: "#6B7280", border: "1px solid #d1d5db", borderRadius: "8px", cursor: "pointer" }}>
+                {LL.cancel()}
+              </button>
+            </div>
           </div>
         </div>
       )}
