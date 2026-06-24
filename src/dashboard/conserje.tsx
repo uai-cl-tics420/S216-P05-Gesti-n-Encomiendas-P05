@@ -14,6 +14,13 @@ interface Complaint {
   package?: { id: number; tracking_code: string; description: string; };
 }
 
+interface Department {
+  id: number;
+  unit_number: string;
+  floor_number: number;
+  tower: string;
+}
+
 const statusInfo = {
   pendiente: { label: "Pendiente", bg: "#FFF3E0", color: "#E65100" },
   en_revision: { label: "En revisión", bg: "#E3F2FD", color: "#1565C0" },
@@ -38,8 +45,15 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
   const [viewPackage, setViewPackage] = useState<Package | null>(null);
   const [selectedComplaint, setSelectedComplaint] = useState<Complaint | null>(null);
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
-  const [form, setForm] = useState({ tracking_code: "", description: "", user_id: "", is_perishable: false });
+  const [form, setForm] = useState({ tracking_code: "", description: "", user_id: "", department_id: "", is_perishable: false });
   const [deliveryForm, setDeliveryForm] = useState({ receiver_name: "", receiver_rut: "", verification_code: "" });
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const loadDepartments = async () => {
+  const res = await fetch("/api/departments");
+  const data = await res.json();
+    setDepartments(data);};
+    useEffect(() => {
+      loadDepartments();}, []);
 
   const showToast = (msg: string, ok = true) => { setToast({ msg, ok }); setTimeout(() => setToast(null), 3000); };
 
@@ -53,15 +67,24 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
   }, []);
 
   const handleAdd = async () => {
-    if (!form.tracking_code || !form.user_id) { showToast("Completa los campos requeridos", false); return; }
+    if (!form.tracking_code || !form.user_id || !form.department_id) {
+      showToast("Completa los campos requeridos", false);
+      return;
+    }
     const res = await fetch("/api/packages", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ tracking_code: form.tracking_code, description: form.description, user_id: form.user_id, is_perishable: form.is_perishable }),
+      body: JSON.stringify({
+      tracking_code: form.tracking_code,
+      description: form.description,
+      user_id: Number(form.user_id),
+      department_id: Number(form.department_id),
+      is_perishable: form.is_perishable,
+    }),
     });
     const data = await res.json();
     if (!res.ok) { showToast(data.error || "Error", false); return; }
-    setForm({ tracking_code: "", description: "", user_id: "", is_perishable: false });
+    setForm({ tracking_code: "", description: "", user_id: "", department_id: "",is_perishable: false });
     setShowForm(false);
     loadPackages();
   };
@@ -163,6 +186,28 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
                 <select value={form.user_id} onChange={e => setForm({ ...form, user_id: e.target.value })} style={inputStyle}>
                   <option value="">{LL.selectResident()}</option>
                   {users.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={{fontSize: "12px",color: "#777",marginBottom: "5px",display: "block",}}>
+                  Departamento *
+                </label>
+                <select
+                  value={form.department_id}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      department_id: e.target.value,
+                    })
+                  }
+                  style={inputStyle}>
+                  <option value="">Seleccione un departamento</option>
+
+                  {departments.map((d) => (
+                    <option key={d.id} value={d.id}>
+                      Torre {d.tower} - Depto {d.unit_number}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div>

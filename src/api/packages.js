@@ -31,6 +31,7 @@ export async function GET(req) {
       where,
       include: {
         user: true,
+        department: true,
         transfers: true,
       },
       orderBy: {
@@ -61,7 +62,8 @@ export async function POST(req) {
       tracking_code,
       description,
       user_id,
-      is_perishable
+      department_id,
+      is_perishable,
     } = await req.json();
 
     const verification_code = generate_verification_code();
@@ -71,6 +73,7 @@ export async function POST(req) {
         tracking_code,
         description,
         user_id: parseInt(user_id),
+        department_id: parseInt(department_id),
         is_perishable: is_perishable || false,
         status: "pendiente",
       },
