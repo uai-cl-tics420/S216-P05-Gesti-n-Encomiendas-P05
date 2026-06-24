@@ -5,6 +5,7 @@ import AdminDashboard from "./dashboard/admin";
 import ConserjedDashboard from "./dashboard/conserje";
 import ResidenteDashboard from "./dashboard/residente";
 
+// asd
 export interface SessionUser {
   id: number;
   name: string;
