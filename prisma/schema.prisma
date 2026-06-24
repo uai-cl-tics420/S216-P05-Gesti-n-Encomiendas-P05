@@ -40,7 +40,6 @@ model packages {
   created_at      DateTime? @default(now()) @db.Timestamp(6)
   updated_at      DateTime? @default(now()) @db.Timestamp(6)
 
-<<<<<<< HEAD
   department_id   Int
   department      departments @relation(fields: [department_id], references: [id])
 
@@ -48,12 +47,10 @@ model packages {
   notifications   notifications[]
   transfers       transfers[]
   claims          claims[]
-=======
   user          user?           @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   notifications notifications[]
   transfers     transfers[]
   claims        claims[]
->>>>>>> 1c5ec4051df9e3789448cf999afd4e37b200ae87
 }
 
 model user {
