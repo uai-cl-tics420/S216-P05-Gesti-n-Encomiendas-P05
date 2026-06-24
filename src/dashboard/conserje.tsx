@@ -18,7 +18,7 @@ interface Department {
   id: number;
   unit_number: string;
   floor_number: number;
-  tower: string;
+  tower?: string;
 }
 
 const statusInfo = {
