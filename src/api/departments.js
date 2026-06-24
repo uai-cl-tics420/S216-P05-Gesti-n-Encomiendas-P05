@@ -1,31 +1,15 @@
 import { prisma } from "../lib/prisma.ts";
-import { verifyAuth } from "../lib/auth.js";
 
-export async function GET(req) {
+export async function GET() {
   try {
-    const auth = await verifyAuth(req);
-
-    if (!auth) {
-      return Response.json(
-        { error: "No autorizado" },
-        { status: 401 }
-      );
-    }
-
-    const departments = await prisma.departments.findMany({
-      orderBy: [
-        { tower: "asc" },
-        { unit_number: "asc" },
-      ],
-    });
+    const departments = await prisma.departments.findMany();
 
     return Response.json(departments);
-
   } catch (error) {
     console.error(error);
 
     return Response.json(
-      { error: "Error al obtener departamentos" },
+      { error: "Error obteniendo departamentos" },
       { status: 500 }
     );
   }
