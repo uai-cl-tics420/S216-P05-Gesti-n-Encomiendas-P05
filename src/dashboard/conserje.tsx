@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useI18nContext } from "../i18n/i18n-react.js";
+import lobbyImg from "../hoteleria.jpeg";
 
 interface User { id: number; name: string; email: string; role: string; }
 interface Package {
@@ -19,12 +20,8 @@ interface Visit {
   qr_code: string; used: boolean; created_at: string; expires_at: string;
   user?: { name: string };
 }
-
 interface Department {
-  id: number;
-  unit_number: string;
-  floor_number: number;
-  tower?: string;
+  id: number; unit_number: string; floor_number: number; tower?: string;
 }
 
 const statusInfo = {
@@ -34,7 +31,39 @@ const statusInfo = {
   rechazado: { label: "Rechazado", bg: "#FAFAFA", color: "#616161" },
 };
 
-type ActiveView = "paquetes" | "nuevo_paquete" | "visitas" | "reclamos";
+type ActiveView = "paquetes" | "nuevo_paquete" | "visitas" | "reclamos" | "online";
+
+function ConserjeCamera() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    navigator.mediaDevices?.getUserMedia({ video: true })
+      .then(stream => { if (videoRef.current) videoRef.current.srcObject = stream; })
+      .catch(() => setError(true));
+    return () => {
+      if (videoRef.current?.srcObject) {
+        (videoRef.current.srcObject as MediaStream).getTracks().forEach(t => t.stop());
+      }
+    };
+  }, []);
+
+  return (
+    <div style={{ flex: 1, borderRadius: "16px", overflow: "hidden", background: "#1a1a2e", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", position: "relative" }}>
+      {error ? (
+        <div style={{ textAlign: "center", color: "white" }}>
+          <p style={{ fontSize: "48px" }}>👤</p>
+          <p style={{ fontSize: "14px", color: "#aaa" }}>Cámara no disponible</p>
+        </div>
+      ) : (
+        <video ref={videoRef} autoPlay muted style={{ width: "100%", height: "100%", objectFit: "cover", transform: "scaleX(-1)" }} />
+      )}
+      <div style={{ position: "absolute", bottom: "1rem", left: "1rem", background: "rgba(0,0,0,0.6)", color: "white", padding: "8px 14px", borderRadius: "8px", fontSize: "13px" }}>
+        🟢 Conserje Online
+      </div>
+    </div>
+  );
+}
 
 export default function ConserjedDashboard({ user, onLogout }: { user: User; onLogout: () => void }) {
   const { LL, locale, setLocale } = useI18nContext();
@@ -46,6 +75,7 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
   const [users, setUsers] = useState<User[]>([]);
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [visits, setVisits] = useState<Visit[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"todos" | "pendiente" | "entregado">("todos");
   const [activeView, setActiveView] = useState<ActiveView>("paquetes");
@@ -58,13 +88,6 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
   const [form, setForm] = useState({ tracking_code: "", description: "", user_id: "", department_id: "", is_perishable: false });
   const [deliveryForm, setDeliveryForm] = useState({ receiver_name: "", receiver_rut: "", verification_code: "" });
-  const [departments, setDepartments] = useState<Department[]>([]);
-  const loadDepartments = async () => {
-  const res = await fetch("/api/departments");
-  const data = await res.json();
-    setDepartments(data);};
-    useEffect(() => {
-      loadDepartments();}, []);
 
   const showToast = (msg: string, ok = true) => { setToast({ msg, ok }); setTimeout(() => setToast(null), 3000); };
   const inputStyle = { width: "100%", padding: "10px 14px", border: "1.5px solid #e8e8e8", borderRadius: "8px", fontSize: "14px", outline: "none", boxSizing: "border-box" as const };
@@ -82,32 +105,35 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
     if (res.ok) setComplaints(await res.json());
   };
 
+  const loadDepartments = async () => {
+    const res = await fetch("/api/departments");
+    if (res.ok) setDepartments(await res.json());
+  };
+
   useEffect(() => {
     loadPackages();
+    loadDepartments();
     fetch("/api/users", { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json()).then(d => setUsers(d.filter((u: any) => u.role === "residente")));
   }, []);
 
   const handleAdd = async () => {
-    if (!form.tracking_code || !form.user_id || !form.department_id) {
-      showToast("Completa los campos requeridos", false);
-      return;
-    }
+    if (!form.tracking_code || !form.user_id) { showToast("Completa los campos requeridos", false); return; }
     const res = await fetch("/api/packages", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify({
-      tracking_code: form.tracking_code,
-      description: form.description,
-      user_id: Number(form.user_id),
-      department_id: Number(form.department_id),
-      is_perishable: form.is_perishable,
-    }),
+        tracking_code: form.tracking_code,
+        description: form.description,
+        user_id: Number(form.user_id),
+        department_id: form.department_id ? Number(form.department_id) : undefined,
+        is_perishable: form.is_perishable,
+      }),
     });
     const data = await res.json();
     if (!res.ok) { showToast(data.error || "Error", false); return; }
-    setForm({ tracking_code: "", description: "", user_id: "", department_id: "",is_perishable: false });
-    setShowForm(false);
+    showToast("Paquete registrado");
+    setForm({ tracking_code: "", description: "", user_id: "", department_id: "", is_perishable: false });
     loadPackages();
     setActiveView("paquetes");
   };
@@ -172,6 +198,7 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
     { key: "nuevo_paquete", label: LL.newPackage(), color: "#022042" },
     { key: "visitas", label: LL.verifyVisit(), color: "#1D9E75", onClick: () => { loadVisits(); setActiveView("visitas"); } },
     { key: "reclamos", label: LL.manageComplaints(), color: "#EF5350", onClick: () => { loadComplaints(); setActiveView("reclamos"); } },
+    { key: "online", label: "Conserje Online", color: "#7C3AED" },
   ];
 
   return (
@@ -206,59 +233,8 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
           ))}
         </div>
 
-        {/* Formulario nuevo paquete */}
-        {showForm && (
-          <div style={{ background: "white", borderRadius: "12px", border: "1.5px solid #1565C0", padding: "1.5rem", marginBottom: "1.5rem" }}>
-            <p style={{ fontWeight: "500", margin: "0 0 1rem", color: "#1565C0" }}>{LL.registerPackage()}</p>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-              <div>
-                <label style={{ fontSize: "12px", color: "#777", marginBottom: "5px", display: "block" }}>{LL.trackingCode()} *</label>
-                <input type="text" placeholder="PKG-004" value={form.tracking_code} onChange={e => setForm({ ...form, tracking_code: e.target.value })} style={inputStyle} />
-              </div>
-              <div>
-                <label style={{ fontSize: "12px", color: "#777", marginBottom: "5px", display: "block" }}>{LL.residentName()} *</label>
-                <select value={form.user_id} onChange={e => setForm({ ...form, user_id: e.target.value })} style={inputStyle}>
-                  <option value="">{LL.selectResident()}</option>
-                  {users.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
-                </select>
-              </div>
-              <div>
-                <label style={{fontSize: "12px",color: "#777",marginBottom: "5px",display: "block",}}>
-                  Departamento *
-                </label>
-                <select
-                  value={form.department_id}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      department_id: e.target.value,
-                    })
-                  }
-                  style={inputStyle}>
-                  <option value="">Seleccione un departamento</option>
-
-                  {departments.map((d) => (
-                    <option key={d.id} value={d.id}>
-                      Torre {d.tower} - Depto {d.unit_number}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label style={{ fontSize: "12px", color: "#777", marginBottom: "5px", display: "block" }}>{LL.description()}</label>
-                <input type="text" placeholder="Ej. Caja mediana" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} style={inputStyle} />
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", paddingTop: "20px" }}>
-                <input type="checkbox" id="perishable" checked={form.is_perishable} onChange={e => setForm({ ...form, is_perishable: e.target.checked })} />
-                <label htmlFor="perishable" style={{ fontSize: "14px", color: "#777" }}>{LL.perishable()}</label>
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
-              <button onClick={handleAdd} style={{ padding: "10px 24px", background: "#1565C0", color: "white", border: "none", borderRadius: "8px", cursor: "pointer" }}>{LL.save()}</button>
-              <button onClick={() => setShowForm(false)} style={{ padding: "10px 24px", background: "white", color: "#999", border: "1.5px solid #e0e0e0", borderRadius: "8px", cursor: "pointer" }}>{LL.cancel()}</button>
-            </div>
-          </div>
-        )}
+        {/* Contenido */}
+        <div style={{ flex: 1, padding: "2rem" }}>
 
           {/* Paquetes */}
           {activeView === "paquetes" && (
@@ -334,6 +310,13 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
                     <select value={form.user_id} onChange={e => setForm({ ...form, user_id: e.target.value })} style={inputStyle}>
                       <option value="">{LL.selectResident()}</option>
                       {users.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: "12px", color: "#777", marginBottom: "5px", display: "block" }}>{LL.department()}</label>
+                    <select value={form.department_id} onChange={e => setForm({ ...form, department_id: e.target.value })} style={inputStyle}>
+                      <option value="">Seleccione departamento</option>
+                      {departments.map(d => <option key={d.id} value={d.id}>Torre {d.tower} - Depto {d.unit_number}</option>)}
                     </select>
                   </div>
                   <div>
@@ -420,6 +403,27 @@ export default function ConserjedDashboard({ user, onLogout }: { user: User; onL
                   </div>
                 );
               })}
+            </>
+          )}
+
+          {/* Conserje Online */}
+          {activeView === "online" && (
+            <>
+              <div style={{ marginBottom: "1.5rem" }}>
+                <h1 style={{ fontSize: "22px", fontWeight: "500", color: "#1a1a1a", margin: 0 }}>Conserje Online</h1>
+                <p style={{ fontSize: "14px", color: "#999", margin: "4px 0 0" }}>Vista en vivo del lobby y conserje</p>
+              </div>
+              <div style={{ display: "flex", gap: "1rem", height: "calc(100vh - 200px)" }}>
+                {/* Lobby */}
+                <div style={{ flex: 1, borderRadius: "16px", overflow: "hidden", position: "relative" }}>
+                  <img src={lobbyImg} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  <div style={{ position: "absolute", bottom: "1rem", left: "1rem", background: "rgba(0,0,0,0.6)", color: "white", padding: "8px 14px", borderRadius: "8px", fontSize: "13px" }}>
+                    📍 Vista del lobby — Edificio
+                  </div>
+                </div>
+                {/* Cámara conserje */}
+                <ConserjeCamera />
+              </div>
             </>
           )}
         </div>
